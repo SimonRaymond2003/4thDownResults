@@ -179,7 +179,6 @@ print(importance_df)
 #kill - my_id
 outcome_data <- outcome_data[, my_id := NULL]
 outcome_data[, year2017_team_ARI := NULL]
-outcome_data[, offense_player_9_weeks_found_12w := NULL]
 ```
 
 ```{r}
