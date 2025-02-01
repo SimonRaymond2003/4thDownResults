@@ -1,7 +1,7 @@
 ---
-title: "NFL Play Selection Dynamics"
-subtitle: "A Machine Learning Enhanced Selection Model Analysis"
-author: "NFL Analytics Team"
+title: "NFL Play Selection"
+subtitle: "A Nonparametric Implementation of the Heckman Correction in 4th Downs in the NFL"
+author: "Simon Raymond"
 date: "January 31, 2025"
 output:
   html_document:
@@ -21,7 +21,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r options, include=FALSE}
 options(max.print=1000000)
 ```
-
 
 ```{r}
 library(data.table)
@@ -92,7 +91,6 @@ library(gridExtra)
 grid.arrange(year_plot, team_plot, ncol = 2)
 ```
 
-
 ```{r}
 select_data[, attempt := as.numeric(as.character(attempt))]
 ```
@@ -109,6 +107,8 @@ rf_model <- randomForest(
   attempt ~ . - my_id,
   data = select_data,
   ntree = 500,
+  nodesize = 1,
+  importance = TRUE,
   probability = TRUE
 )
 
@@ -120,14 +120,13 @@ print(paste("OOB AUC:", round(oob_auc, 3)))
 
 # Get probability predictions for GIMR
 z <- predict(rf_model, newdata = select_data, type = "prob")[,2]
-```
 
-
-```{r}
 # Calculate residuals for RF predictions
 y <- as.numeric(as.character(select_data$attempt))
 residuals <- y - z
+```
 
+```{r}
 # Histogram of residuals
 hist(residuals, main="Distribution of RF Model Residuals", xlab="Residual", breaks=50)
 ```
@@ -147,12 +146,6 @@ GIMR <- dnorm(qnorm(z)) / (1 - pnorm(qnorm(z)))
 # Add GIMR to the data
 select_data[, GIMR := GIMR]
 
-# Print variable importance mdi
-imp <- importance(rf_model)
-
-```
-
-```{r}
 # Create a data.table with just my_id and GIMR from select_data
 GIMR_dt <- data.table(my_id = select_data$my_id, GIMR = GIMR)
 
@@ -160,7 +153,20 @@ GIMR_dt <- data.table(my_id = select_data$my_id, GIMR = GIMR)
 outcome_data[GIMR_dt, GIMR := i.GIMR, on = "my_id"]
 ```
 
+```{r}
+library(tibble)
+
+importance_df <- importance(rf_model) %>%
+  as.data.frame() %>%
+  rownames_to_column("Variable") %>%
+  arrange(desc(MeanDecreaseAccuracy))
+
+# Print results
+print(importance_df)
+```
+
 # Outcome Step
+
 ```{r}
 #kill - my_id
 outcome_data <- outcome_data[, my_id := NULL]
@@ -168,13 +174,11 @@ outcome_data[, year2017_team_ARI := NULL]
 outcome_data[, offense_player_9_weeks_found_12w := NULL]
 ```
 
-
 ```{r}
 outcome_data[, conversion := as.numeric(as.character(conversion))]
 # Then run OLS with GIMR correction
 ols_model <- lm(conversion ~  ., data = outcome_data)
 ```
-
 
 ```{r}
 library("lmtest")
