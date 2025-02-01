@@ -1,15 +1,23 @@
 ---
-title: "NFL Play Selection"
-subtitle: "A Nonparametric Implementation of the Heckman Correction in 4th Downs in the NFL"
-author: "Simon Raymond"
-date: "January 31, 2025"
+title: "**A Nonparametric Implementation of the Heckman Correction in 4th Downs in the NFL**"
+author: "**Simon Raymond**"
+date: "**January 31, 2025**"
 output:
   html_document:
     theme: cosmo
     toc: true
-    toc_float: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
     code_folding: hide
     highlight: tango
+    number_sections: true
+    fig_caption: true
+    df_print: paged
+    css: styles.css
+mainfont: "**Open Sans**"
+fontsize: "**12pt**"
+linkcolor: "**#0066cc**"
 ---
 
 # Setup
@@ -181,11 +189,18 @@ ols_model <- lm(conversion ~  ., data = outcome_data)
 ```
 
 ```{r}
+# Load required libraries
 library("lmtest")
 library("sandwich")
 
-# hetroskedastic adjusted SEs
-coeftest(ols_model, vcov = vcovHC(ols_model, type = "HC0"))
+# Run coeftest and print names, t-values, and p-values
+coef_test <- coeftest(ols_model, vcov = vcovHC(ols_model, type = "HC0"))
+for(i in 1:nrow(coef_test)) {
+  cat(sprintf("%-40s %8.3f %8.3f\n", 
+              rownames(coef_test)[i], 
+              coef_test[i, 3],  # t-values (3rd column)
+              coef_test[i, 4])) # p-values (4th column)
+}
 ```
 
 
