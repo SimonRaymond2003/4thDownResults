@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>4th Downs in the NFL - XGBoost Predictive Models</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet">
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">4th Downs in the NFL</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html" rel="" target="">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./heckman.html" rel="" target="">
+ <span class="menu-text">Heckman Selection</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./xgboost.html" rel="" target="" aria-current="page">
+ <span class="menu-text">XGBoost Prediction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./attendance.html" rel="" target="">
+ <span class="menu-text">Attendance Impact</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./thirddown.html" rel="" target="">
+ <span class="menu-text">Third Down Analysis</span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools ms-auto">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">XGBoost Predictive Models</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)   </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>outcome_data <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"predict_outcome.csv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load library and prepare data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#library(randomForest)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#rf_data &lt;- copy(outcome_data)[, my_id := NULL]</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#rf_data[, conversion := as.factor(conversion)]</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Run RF and get OOB AUC</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#rf_model &lt;- randomForest(conversion ~ ., data = rf_data, ntree = 100, importance = TRUE)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#pred_oob &lt;- predict(rf_model, type = "prob")[,2]</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">#cat("\nOOB AUC:", as.numeric(performance(prediction(pred_oob, as.numeric(as.character(rf_data$conversion))), "auc")@y.values))</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter variables based on positive MDA</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#mda_scores &lt;- importance(rf_model)[, "MeanDecreaseAccuracy"]</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#keep_vars &lt;- unique(c(names(mda_scores[mda_scores &gt; 0]), "my_id", "conversion"))</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">#outcome_data &lt;- outcome_data[, .SD, .SDcols = keep_vars]</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#cat("\nVariables kept:", length(keep_vars), "out of", ncol(rf_data) + 1)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load required libraries</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ROCR)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(parallel)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare the XGBoost matrices</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>xs <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span> . <span class="sc">-</span> <span class="dv">1</span> <span class="sc">-</span> conversion <span class="sc">-</span> my_id, <span class="at">data =</span> outcome_data)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">as.character</span>(outcome_data<span class="sc">$</span>conversion))</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Create parameter grid</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">eta =</span> <span class="fu">seq</span>(<span class="fl">0.001</span>, <span class="fl">0.1</span>, <span class="at">by =</span> <span class="fl">0.007</span>),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_depth =</span> <span class="fu">seq</span>(<span class="dv">7</span>, <span class="dv">7</span>, <span class="at">by =</span> <span class="dv">2</span>),</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">min_child_weight =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="dv">1</span>),        </span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">subsample =</span> <span class="fu">seq</span>(<span class="fl">0.8</span>, <span class="fl">0.8</span>, <span class="at">by =</span> <span class="fl">0.2</span>),</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">colsample_bytree =</span> <span class="fu">seq</span>(<span class="fl">0.8</span>, <span class="fl">0.8</span>, <span class="at">by =</span> <span class="fl">0.2</span>),</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">lambda =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="dv">1</span>),                </span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="at">by =</span> <span class="dv">1</span>),                  </span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">gamma =</span> <span class="fu">seq</span>(<span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="at">by =</span> <span class="fl">0.1</span>),               </span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrounds =</span> <span class="fu">seq</span>(<span class="dv">100</span>, <span class="dv">400</span>, <span class="at">by =</span> <span class="dv">200</span>)</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Sample grid points</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>conf_lev <span class="ot">&lt;-</span> .<span class="dv">95</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>num_max <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(<span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span>conf_lev)<span class="sc">/</span><span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span>num_max<span class="sc">/</span><span class="fu">nrow</span>(grid)))</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>ind <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">nrow</span>(grid), n, <span class="at">replace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>rgrid <span class="ot">&lt;-</span> grid[ind, ]</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up parallel processing</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>nc <span class="ot">&lt;-</span> <span class="fu">detectCores</span>() <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Validation phase</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Phase 1: Validation Phase</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Phase 1: Validation Phase</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>n_validations <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>validation_results <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> <span class="fu">nrow</span>(rgrid), <span class="at">ncol =</span> n_validations)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>validation_j_stats <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> <span class="fu">nrow</span>(rgrid), <span class="at">ncol =</span> n_validations)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(rgrid)) {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a> <span class="co"># cat("\nTesting parameter set", j, "of", nrow(rgrid), "\n")</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("eta =", rgrid[j, "eta"], ", nrounds =", rgrid[j, "nrounds"], "\n")</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_validations) {</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create validation split</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    idx <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">sample</span>(<span class="fu">nrow</span>(xs), <span class="fu">nrow</span>(xs), T))</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    train_x <span class="ot">&lt;-</span> xs[idx, ]</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    train_y <span class="ot">&lt;-</span> y[idx]</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    val_x <span class="ot">&lt;-</span> xs[<span class="sc">-</span>idx, ]</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    val_y <span class="ot">&lt;-</span> y[<span class="sc">-</span>idx]</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    prm <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">booster =</span> <span class="st">"gbtree"</span>,</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">max_depth =</span> rgrid[j, <span class="st">"max_depth"</span>],</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">eta =</span> rgrid[j, <span class="st">"eta"</span>],</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">subsample =</span> rgrid[j, <span class="st">"subsample"</span>],</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">colsample_bytree =</span> rgrid[j, <span class="st">"colsample_bytree"</span>],</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">gamma =</span> rgrid[j, <span class="st">"gamma"</span>],</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">min_child_weight =</span> rgrid[j, <span class="st">"min_child_weight"</span>],</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">alpha =</span> rgrid[j, <span class="st">"alpha"</span>],</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> rgrid[j, <span class="st">"lambda"</span>],</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">nthread =</span> nc</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    dm_train <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> train_x, <span class="at">label =</span> train_y)</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    mdl <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>      <span class="at">params =</span> prm,</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> dm_train,</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>      <span class="at">nrounds =</span> rgrid[j, <span class="st">"nrounds"</span>],</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>      <span class="at">verbose =</span> <span class="cn">FALSE</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get predictions and ROC metrics</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    p <span class="ot">&lt;-</span> <span class="fu">predict</span>(mdl, <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> val_x))</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    pred <span class="ot">&lt;-</span> <span class="fu">prediction</span>(p, val_y)</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate AUC</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>    validation_results[j, i] <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"auc"</span>)<span class="sc">@</span>y.values[[<span class="dv">1</span>]]</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate Youden's J Statistic</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    roc <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"tpr"</span>, <span class="st">"fpr"</span>)</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>    tpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(roc<span class="sc">@</span>y.values)</span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>    fpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(roc<span class="sc">@</span>x.values)</span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>    j_stats <span class="ot">&lt;-</span> tpr <span class="sc">-</span> fpr</span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>    validation_j_stats[j, i] <span class="ot">&lt;-</span> <span class="fu">max</span>(j_stats)</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("Mean AUC:", mean(validation_results[j,]), "\n")</span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("SD AUC:", sd(validation_results[j,]), "\n")</span></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("Mean J statistic:", mean(validation_j_stats[j,]), "\n")</span></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a><span class="co"># Select best parameters based on validation AUC</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>best_params_idx <span class="ot">&lt;-</span> <span class="fu">which.max</span>(<span class="fu">rowMeans</span>(validation_results))</span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>best_params <span class="ot">&lt;-</span> rgrid[best_params_idx,]</span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Best parameters:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Best parameters:</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(best_params)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    eta max_depth min_child_weight subsample colsample_bytree lambda alpha
+2 0.008         7                1       0.8              0.8      1     0
+  gamma nrounds
+2   0.1     100</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run 100 tests with best parameters</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Running 100 test iterations with best parameters...</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Running 100 test iterations with best parameters...</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>test_aucs <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">100</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>test_j_stats <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">100</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>confusion_matrices <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>performance_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>all_thresholds <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">100</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Train final model with best parameters</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>best_params_list <span class="ot">&lt;-</span> <span class="fu">as.list</span>(best_params[<span class="sc">-</span><span class="fu">which</span>(<span class="fu">names</span>(best_params) <span class="sc">==</span> <span class="st">"nrounds"</span>)])</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>booster <span class="ot">&lt;-</span> <span class="st">"gbtree"</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>objective <span class="ot">&lt;-</span> <span class="st">"binary:logistic"</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>nthread <span class="ot">&lt;-</span> nc</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>) {</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("\nIteration", i, "of 100\n")       </span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Create test split</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  idx <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">sample</span>(<span class="fu">nrow</span>(xs), <span class="fu">nrow</span>(xs), T))</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  train_x <span class="ot">&lt;-</span> xs[idx, ]</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  train_y <span class="ot">&lt;-</span> y[idx]</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  test_x <span class="ot">&lt;-</span> xs[<span class="sc">-</span>idx, ]</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  test_y <span class="ot">&lt;-</span> y[<span class="sc">-</span>idx]</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Train model</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  dm_train <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> train_x, <span class="at">label =</span> train_y)</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>  mdl <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">params =</span> best_params_list,</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> dm_train,</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">nrounds =</span> best_params[[<span class="st">"nrounds"</span>]],</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">verbose =</span> <span class="cn">FALSE</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Get predictions</span></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">predict</span>(mdl, <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> test_x))</span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>  pred <span class="ot">&lt;-</span> <span class="fu">prediction</span>(p, test_y)</span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate AUC</span></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>  test_aucs[i] <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"auc"</span>)<span class="sc">@</span>y.values[[<span class="dv">1</span>]]</span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate ROC curve and store</span></span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>  perf <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"tpr"</span>, <span class="st">"fpr"</span>)</span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>  performance_list[[i]] <span class="ot">&lt;-</span> perf</span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Find optimal threshold using Youden's J statistic</span></span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>  tpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>y.values)</span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>  fpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>x.values)</span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>  j_stats <span class="ot">&lt;-</span> tpr <span class="sc">-</span> fpr</span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a>  best_j_idx <span class="ot">&lt;-</span> <span class="fu">which.max</span>(j_stats)</span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a>  optimal_threshold <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>alpha.values)[best_j_idx]</span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a>  all_thresholds[i] <span class="ot">&lt;-</span> optimal_threshold</span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a>  test_j_stats[i] <span class="ot">&lt;-</span> j_stats[best_j_idx]</span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Create confusion matrix with optimal threshold (1-0 order with TP in top left)</span></span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a>  pred_class <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(p <span class="sc">&gt;=</span> optimal_threshold, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a>  cm <span class="ot">&lt;-</span> <span class="fu">table</span>(<span class="fu">factor</span>(test_y, <span class="at">levels=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)), </span>
+<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a>             <span class="fu">factor</span>(pred_class, <span class="at">levels=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)))</span>
+<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(cm) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Pred 1"</span>, <span class="st">"Pred 0"</span>)</span>
+<span id="cb11-56"><a href="#cb11-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(cm) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"True 1"</span>, <span class="st">"True 0"</span>)</span>
+<span id="cb11-57"><a href="#cb11-57" aria-hidden="true" tabindex="-1"></a>  confusion_matrices[[i]] <span class="ot">&lt;-</span> cm</span>
+<span id="cb11-58"><a href="#cb11-58" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-59"><a href="#cb11-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-60"><a href="#cb11-60" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate average confusion matrix</span></span>
+<span id="cb11-61"><a href="#cb11-61" aria-hidden="true" tabindex="-1"></a>avg_cm <span class="ot">&lt;-</span> <span class="fu">Reduce</span>(<span class="st">'+'</span>, confusion_matrices) <span class="sc">/</span> <span class="fu">length</span>(confusion_matrices)</span>
+<span id="cb11-62"><a href="#cb11-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-63"><a href="#cb11-63" aria-hidden="true" tabindex="-1"></a><span class="co"># Print final results</span></span>
+<span id="cb11-64"><a href="#cb11-64" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Test Results over 100 iterations:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Test Results over 100 iterations:</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean AUC:"</span>, <span class="fu">mean</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean AUC: 0.6762738 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SD AUC:"</span>, <span class="fu">sd</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>SD AUC: 0.01108078 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean Youden's J:"</span>, <span class="fu">mean</span>(test_j_stats), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean Youden's J: 0.2833812 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SD Youden's J:"</span>, <span class="fu">sd</span>(test_j_stats), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>SD Youden's J: 0.01921065 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean Optimal Threshold:"</span>, <span class="fu">mean</span>(all_thresholds), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean Optimal Threshold: 0.5110999 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"95% CI for AUC:"</span>, <span class="fu">mean</span>(test_aucs) <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(test_aucs), </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"to"</span>, <span class="fu">mean</span>(test_aucs) <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>95% CI for AUC: 0.6545555 to 0.6979921 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Average Confusion Matrix:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Average Confusion Matrix:</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(avg_cm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>        
+         Pred 1 Pred 0
+  True 1 513.94 256.56
+  True 0 271.26 435.78</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot ROC curve with confidence intervals</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">100</span><span class="sc">/</span><span class="dv">100</span>, <span class="dv">0</span><span class="sc">:</span><span class="dv">100</span><span class="sc">/</span><span class="dv">100</span>, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lty=</span><span class="dv">2</span>, </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"False Positive Rate"</span>, <span class="at">ylab=</span><span class="st">"True Positive Rate"</span>,</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"ROC Curve"</span>)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate average ROC curve with confidence intervals</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>fpr_grid <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">100</span>)</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>tpr_matrix <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="cn">NA</span>, <span class="at">nrow =</span> <span class="fu">length</span>(performance_list), <span class="at">ncol =</span> <span class="fu">length</span>(fpr_grid))</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">seq_along</span>(performance_list)) {</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>  curve_i <span class="ot">&lt;-</span> performance_list[[i]]</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>  tpr_matrix[i,] <span class="ot">&lt;-</span> <span class="fu">approx</span>(curve_i<span class="sc">@</span>x.values[[<span class="dv">1</span>]], </span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>                          curve_i<span class="sc">@</span>y.values[[<span class="dv">1</span>]], </span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>                          <span class="at">xout =</span> fpr_grid)<span class="sc">$</span>y</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>mean_tpr <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(tpr_matrix, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, mean_tpr, <span class="at">col=</span><span class="st">"red"</span>, <span class="at">lwd=</span><span class="dv">2</span>)</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Add optimal threshold point</span></span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>opt_point_idx <span class="ot">&lt;-</span> <span class="fu">which.min</span>(<span class="fu">abs</span>(fpr_grid <span class="sc">-</span> <span class="fu">mean</span>(all_thresholds)))</span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(fpr_grid[opt_point_idx], mean_tpr[opt_point_idx], </span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="st">"blue"</span>, <span class="at">pch=</span><span class="dv">19</span>, <span class="at">cex=</span><span class="fl">1.5</span>)</span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Add confidence interval</span></span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a>ci_lower <span class="ot">&lt;-</span> <span class="fu">apply</span>(tpr_matrix, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="fu">quantile</span>(x, <span class="fl">0.025</span>, <span class="at">na.rm=</span><span class="cn">TRUE</span>))</span>
+<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a>ci_upper <span class="ot">&lt;-</span> <span class="fu">apply</span>(tpr_matrix, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="fu">quantile</span>(x, <span class="fl">0.975</span>, <span class="at">na.rm=</span><span class="cn">TRUE</span>))</span>
+<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, ci_lower, <span class="at">col=</span><span class="st">"gray"</span>, <span class="at">lty=</span><span class="dv">2</span>)</span>
+<span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, ci_upper, <span class="at">col=</span><span class="st">"gray"</span>, <span class="at">lty=</span><span class="dv">2</span>)</span>
+<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Add legend</span></span>
+<span id="cb29-32"><a href="#cb29-32" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"bottomright"</span>, </span>
+<span id="cb29-33"><a href="#cb29-33" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend=</span><span class="fu">c</span>(<span class="st">"Random"</span>, <span class="st">"Average ROC"</span>, <span class="st">"95% CI"</span>, <span class="st">"Optimal Threshold"</span>),</span>
+<span id="cb29-34"><a href="#cb29-34" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="fu">c</span>(<span class="st">"black"</span>, <span class="st">"red"</span>, <span class="st">"gray"</span>, <span class="st">"blue"</span>), </span>
+<span id="cb29-35"><a href="#cb29-35" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="cn">NA</span>), </span>
+<span id="cb29-36"><a href="#cb29-36" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch=</span><span class="fu">c</span>(<span class="cn">NA</span>,<span class="cn">NA</span>,<span class="cn">NA</span>,<span class="dv">19</span>),</span>
+<span id="cb29-37"><a href="#cb29-37" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">1</span>,<span class="cn">NA</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="xgboost_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load required libraries</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ROCR)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(parallel)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare the XGBoost matrices</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>xs <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span> . <span class="sc">-</span> <span class="dv">1</span> <span class="sc">-</span> conversion <span class="sc">-</span> my_id, <span class="at">data =</span> outcome_data)</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">as.character</span>(outcome_data<span class="sc">$</span>conversion))</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Create parameter grid - only tune eta and nrounds</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">eta =</span> <span class="fu">seq</span>(<span class="fl">0.001</span>, <span class="fl">0.1</span>, <span class="at">by =</span> <span class="fl">0.03</span>),</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrounds =</span> <span class="fu">seq</span>(<span class="dv">50</span>, <span class="dv">500</span>, <span class="at">by =</span> <span class="dv">100</span>)</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Sample grid points</span></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>conf_lev <span class="ot">&lt;-</span> .<span class="dv">95</span></span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>num_max <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(<span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span>conf_lev)<span class="sc">/</span><span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span>num_max<span class="sc">/</span><span class="fu">nrow</span>(grid)))</span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>ind <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">nrow</span>(grid), n, <span class="at">replace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>rgrid <span class="ot">&lt;-</span> grid[ind, ]</span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up parallel processing</span></span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>nc <span class="ot">&lt;-</span> <span class="fu">detectCores</span>() <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Validation phase</span></span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Phase 1: Validation Phase</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Phase 1: Validation Phase</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>n_validations <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>validation_results <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> <span class="fu">nrow</span>(rgrid), <span class="at">ncol =</span> n_validations)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>validation_j_stats <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> <span class="fu">nrow</span>(rgrid), <span class="at">ncol =</span> n_validations)</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(rgrid)) {</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("\nTesting parameter set", j, "of", nrow(rgrid), "\n")</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("eta =", rgrid[j, "eta"], ", nrounds =", rgrid[j, "nrounds"], "\n")</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_validations) {</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create validation split</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>    idx <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">sample</span>(<span class="fu">nrow</span>(xs), <span class="fu">nrow</span>(xs), T))</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>    train_x <span class="ot">&lt;-</span> xs[idx, ]</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>    train_y <span class="ot">&lt;-</span> y[idx]</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>    val_x <span class="ot">&lt;-</span> xs[<span class="sc">-</span>idx, ]</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>    val_y <span class="ot">&lt;-</span> y[<span class="sc">-</span>idx]</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>    prm <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">booster =</span> <span class="st">"gblinear"</span>,</span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">eta =</span> rgrid[j, <span class="st">"eta"</span>],</span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">nthread =</span> nc</span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a>    dm_train <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> train_x, <span class="at">label =</span> train_y)</span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a>    mdl <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">params =</span> prm,</span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> dm_train,</span>
+<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">nrounds =</span> rgrid[j, <span class="st">"nrounds"</span>],</span>
+<span id="cb32-29"><a href="#cb32-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">verbose =</span> <span class="cn">FALSE</span></span>
+<span id="cb32-30"><a href="#cb32-30" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb32-31"><a href="#cb32-31" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb32-32"><a href="#cb32-32" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get predictions and ROC metrics</span></span>
+<span id="cb32-33"><a href="#cb32-33" aria-hidden="true" tabindex="-1"></a>    p <span class="ot">&lt;-</span> <span class="fu">predict</span>(mdl, <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> val_x))</span>
+<span id="cb32-34"><a href="#cb32-34" aria-hidden="true" tabindex="-1"></a>    pred <span class="ot">&lt;-</span> <span class="fu">prediction</span>(p, val_y)</span>
+<span id="cb32-35"><a href="#cb32-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb32-36"><a href="#cb32-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate AUC</span></span>
+<span id="cb32-37"><a href="#cb32-37" aria-hidden="true" tabindex="-1"></a>    validation_results[j, i] <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"auc"</span>)<span class="sc">@</span>y.values[[<span class="dv">1</span>]]</span>
+<span id="cb32-38"><a href="#cb32-38" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb32-39"><a href="#cb32-39" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate Youden's J Statistic</span></span>
+<span id="cb32-40"><a href="#cb32-40" aria-hidden="true" tabindex="-1"></a>    roc <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"tpr"</span>, <span class="st">"fpr"</span>)</span>
+<span id="cb32-41"><a href="#cb32-41" aria-hidden="true" tabindex="-1"></a>    tpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(roc<span class="sc">@</span>y.values)</span>
+<span id="cb32-42"><a href="#cb32-42" aria-hidden="true" tabindex="-1"></a>    fpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(roc<span class="sc">@</span>x.values)</span>
+<span id="cb32-43"><a href="#cb32-43" aria-hidden="true" tabindex="-1"></a>    j_stats <span class="ot">&lt;-</span> tpr <span class="sc">-</span> fpr</span>
+<span id="cb32-44"><a href="#cb32-44" aria-hidden="true" tabindex="-1"></a>    validation_j_stats[j, i] <span class="ot">&lt;-</span> <span class="fu">max</span>(j_stats)</span>
+<span id="cb32-45"><a href="#cb32-45" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb32-46"><a href="#cb32-46" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb32-47"><a href="#cb32-47" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("Mean AUC:", mean(validation_results[j,]), "\n")</span></span>
+<span id="cb32-48"><a href="#cb32-48" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("SD AUC:", sd(validation_results[j,]), "\n")</span></span>
+<span id="cb32-49"><a href="#cb32-49" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("Mean J statistic:", mean(validation_j_stats[j,]), "\n")</span></span>
+<span id="cb32-50"><a href="#cb32-50" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb32-51"><a href="#cb32-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-52"><a href="#cb32-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Select best parameters based on validation AUC</span></span>
+<span id="cb32-53"><a href="#cb32-53" aria-hidden="true" tabindex="-1"></a>best_params_idx <span class="ot">&lt;-</span> <span class="fu">which.max</span>(<span class="fu">rowMeans</span>(validation_results))</span>
+<span id="cb32-54"><a href="#cb32-54" aria-hidden="true" tabindex="-1"></a>best_params <span class="ot">&lt;-</span> rgrid[best_params_idx,]</span>
+<span id="cb32-55"><a href="#cb32-55" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Best parameters:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Best parameters:</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(best_params)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>     eta nrounds
+17 0.001     450</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run X tests with best parameters</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Running X test iterations with best parameters...</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Running X test iterations with best parameters...</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>test_aucs <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>test_j_stats <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>confusion_matrices <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>performance_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>all_thresholds <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Train final model with best parameters</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>best_params_list <span class="ot">&lt;-</span> <span class="fu">as.list</span>(best_params[<span class="sc">-</span><span class="fu">which</span>(<span class="fu">names</span>(best_params) <span class="sc">==</span> <span class="st">"nrounds"</span>)])</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>booster <span class="ot">&lt;-</span> <span class="st">"gblinear"</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>objective <span class="ot">&lt;-</span> <span class="st">"binary:logistic"</span></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>nthread <span class="ot">&lt;-</span> nc</span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">25</span>) {</span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("\nIteration", i, "of 100\n")       </span></span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Create test split</span></span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>  idx <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">sample</span>(<span class="fu">nrow</span>(xs), <span class="fu">nrow</span>(xs), T))</span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>  train_x <span class="ot">&lt;-</span> xs[idx, ]</span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>  train_y <span class="ot">&lt;-</span> y[idx]</span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>  test_x <span class="ot">&lt;-</span> xs[<span class="sc">-</span>idx, ]</span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a>  test_y <span class="ot">&lt;-</span> y[<span class="sc">-</span>idx]</span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Train model</span></span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a>  dm_train <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> train_x, <span class="at">label =</span> train_y)</span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a>  mdl <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">params =</span> best_params_list,</span>
+<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> dm_train,</span>
+<span id="cb38-27"><a href="#cb38-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">nrounds =</span> best_params[[<span class="st">"nrounds"</span>]],</span>
+<span id="cb38-28"><a href="#cb38-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">verbose =</span> <span class="cn">FALSE</span></span>
+<span id="cb38-29"><a href="#cb38-29" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb38-30"><a href="#cb38-30" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb38-31"><a href="#cb38-31" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Get predictions</span></span>
+<span id="cb38-32"><a href="#cb38-32" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">predict</span>(mdl, <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> test_x))</span>
+<span id="cb38-33"><a href="#cb38-33" aria-hidden="true" tabindex="-1"></a>  pred <span class="ot">&lt;-</span> <span class="fu">prediction</span>(p, test_y)</span>
+<span id="cb38-34"><a href="#cb38-34" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb38-35"><a href="#cb38-35" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate AUC</span></span>
+<span id="cb38-36"><a href="#cb38-36" aria-hidden="true" tabindex="-1"></a>  test_aucs[i] <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"auc"</span>)<span class="sc">@</span>y.values[[<span class="dv">1</span>]]</span>
+<span id="cb38-37"><a href="#cb38-37" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb38-38"><a href="#cb38-38" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate ROC curve and store</span></span>
+<span id="cb38-39"><a href="#cb38-39" aria-hidden="true" tabindex="-1"></a>  perf <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"tpr"</span>, <span class="st">"fpr"</span>)</span>
+<span id="cb38-40"><a href="#cb38-40" aria-hidden="true" tabindex="-1"></a>  performance_list[[i]] <span class="ot">&lt;-</span> perf</span>
+<span id="cb38-41"><a href="#cb38-41" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb38-42"><a href="#cb38-42" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Find optimal threshold using Youden's J statistic</span></span>
+<span id="cb38-43"><a href="#cb38-43" aria-hidden="true" tabindex="-1"></a>  tpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>y.values)</span>
+<span id="cb38-44"><a href="#cb38-44" aria-hidden="true" tabindex="-1"></a>  fpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>x.values)</span>
+<span id="cb38-45"><a href="#cb38-45" aria-hidden="true" tabindex="-1"></a>  j_stats <span class="ot">&lt;-</span> tpr <span class="sc">-</span> fpr</span>
+<span id="cb38-46"><a href="#cb38-46" aria-hidden="true" tabindex="-1"></a>  best_j_idx <span class="ot">&lt;-</span> <span class="fu">which.max</span>(j_stats)</span>
+<span id="cb38-47"><a href="#cb38-47" aria-hidden="true" tabindex="-1"></a>  optimal_threshold <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>alpha.values)[best_j_idx]</span>
+<span id="cb38-48"><a href="#cb38-48" aria-hidden="true" tabindex="-1"></a>  all_thresholds[i] <span class="ot">&lt;-</span> optimal_threshold</span>
+<span id="cb38-49"><a href="#cb38-49" aria-hidden="true" tabindex="-1"></a>  test_j_stats[i] <span class="ot">&lt;-</span> j_stats[best_j_idx]</span>
+<span id="cb38-50"><a href="#cb38-50" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb38-51"><a href="#cb38-51" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Create confusion matrix with optimal threshold (1-0 order with TP in top left)</span></span>
+<span id="cb38-52"><a href="#cb38-52" aria-hidden="true" tabindex="-1"></a>  pred_class <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(p <span class="sc">&gt;=</span> optimal_threshold, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb38-53"><a href="#cb38-53" aria-hidden="true" tabindex="-1"></a>  cm <span class="ot">&lt;-</span> <span class="fu">table</span>(<span class="fu">factor</span>(test_y, <span class="at">levels=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)), </span>
+<span id="cb38-54"><a href="#cb38-54" aria-hidden="true" tabindex="-1"></a>             <span class="fu">factor</span>(pred_class, <span class="at">levels=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)))</span>
+<span id="cb38-55"><a href="#cb38-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(cm) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Pred 1"</span>, <span class="st">"Pred 0"</span>)</span>
+<span id="cb38-56"><a href="#cb38-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(cm) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"True 1"</span>, <span class="st">"True 0"</span>)</span>
+<span id="cb38-57"><a href="#cb38-57" aria-hidden="true" tabindex="-1"></a>  confusion_matrices[[i]] <span class="ot">&lt;-</span> cm</span>
+<span id="cb38-58"><a href="#cb38-58" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb38-59"><a href="#cb38-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-60"><a href="#cb38-60" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate average confusion matrix</span></span>
+<span id="cb38-61"><a href="#cb38-61" aria-hidden="true" tabindex="-1"></a>avg_cm <span class="ot">&lt;-</span> <span class="fu">Reduce</span>(<span class="st">'+'</span>, confusion_matrices) <span class="sc">/</span> <span class="fu">length</span>(confusion_matrices)</span>
+<span id="cb38-62"><a href="#cb38-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-63"><a href="#cb38-63" aria-hidden="true" tabindex="-1"></a><span class="co"># Print final results</span></span>
+<span id="cb38-64"><a href="#cb38-64" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Test Results over 100 iterations:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Test Results over 100 iterations:</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean AUC:"</span>, <span class="fu">mean</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean AUC: 0.6490824 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SD AUC:"</span>, <span class="fu">sd</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>SD AUC: 0.01376997 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean Youden's J:"</span>, <span class="fu">mean</span>(test_j_stats), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean Youden's J: 0.2374326 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SD Youden's J:"</span>, <span class="fu">sd</span>(test_j_stats), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>SD Youden's J: 0.02486402 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean Optimal Threshold:"</span>, <span class="fu">mean</span>(all_thresholds), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean Optimal Threshold: 0.5022285 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"95% CI for AUC:"</span>, <span class="fu">mean</span>(test_aucs) <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(test_aucs), </span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"to"</span>, <span class="fu">mean</span>(test_aucs) <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>95% CI for AUC: 0.6220932 to 0.6760715 </code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Average Confusion Matrix:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Average Confusion Matrix:</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(avg_cm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>        
+         Pred 1 Pred 0
+  True 1 518.00 250.36
+  True 0 312.44 401.80</code></pre>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot ROC curve with confidence intervals</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">100</span><span class="sc">/</span><span class="dv">100</span>, <span class="dv">0</span><span class="sc">:</span><span class="dv">100</span><span class="sc">/</span><span class="dv">100</span>, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lty=</span><span class="dv">2</span>, </span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"False Positive Rate"</span>, <span class="at">ylab=</span><span class="st">"True Positive Rate"</span>,</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"ROC Curve"</span>)</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate average ROC curve with confidence intervals</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>fpr_grid <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">100</span>)</span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>tpr_matrix <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="cn">NA</span>, <span class="at">nrow =</span> <span class="fu">length</span>(performance_list), <span class="at">ncol =</span> <span class="fu">length</span>(fpr_grid))</span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">seq_along</span>(performance_list)) {</span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>  curve_i <span class="ot">&lt;-</span> performance_list[[i]]</span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a>  tpr_matrix[i,] <span class="ot">&lt;-</span> <span class="fu">approx</span>(curve_i<span class="sc">@</span>x.values[[<span class="dv">1</span>]], </span>
+<span id="cb56-13"><a href="#cb56-13" aria-hidden="true" tabindex="-1"></a>                          curve_i<span class="sc">@</span>y.values[[<span class="dv">1</span>]], </span>
+<span id="cb56-14"><a href="#cb56-14" aria-hidden="true" tabindex="-1"></a>                          <span class="at">xout =</span> fpr_grid)<span class="sc">$</span>y</span>
+<span id="cb56-15"><a href="#cb56-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb56-16"><a href="#cb56-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-17"><a href="#cb56-17" aria-hidden="true" tabindex="-1"></a>mean_tpr <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(tpr_matrix, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb56-18"><a href="#cb56-18" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, mean_tpr, <span class="at">col=</span><span class="st">"red"</span>, <span class="at">lwd=</span><span class="dv">2</span>)</span>
+<span id="cb56-19"><a href="#cb56-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-20"><a href="#cb56-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Add optimal threshold point</span></span>
+<span id="cb56-21"><a href="#cb56-21" aria-hidden="true" tabindex="-1"></a>opt_point_idx <span class="ot">&lt;-</span> <span class="fu">which.min</span>(<span class="fu">abs</span>(fpr_grid <span class="sc">-</span> <span class="fu">mean</span>(all_thresholds)))</span>
+<span id="cb56-22"><a href="#cb56-22" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(fpr_grid[opt_point_idx], mean_tpr[opt_point_idx], </span>
+<span id="cb56-23"><a href="#cb56-23" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="st">"blue"</span>, <span class="at">pch=</span><span class="dv">19</span>, <span class="at">cex=</span><span class="fl">1.5</span>)</span>
+<span id="cb56-24"><a href="#cb56-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-25"><a href="#cb56-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Add confidence interval</span></span>
+<span id="cb56-26"><a href="#cb56-26" aria-hidden="true" tabindex="-1"></a>ci_lower <span class="ot">&lt;-</span> <span class="fu">apply</span>(tpr_matrix, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="fu">quantile</span>(x, <span class="fl">0.025</span>, <span class="at">na.rm=</span><span class="cn">TRUE</span>))</span>
+<span id="cb56-27"><a href="#cb56-27" aria-hidden="true" tabindex="-1"></a>ci_upper <span class="ot">&lt;-</span> <span class="fu">apply</span>(tpr_matrix, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="fu">quantile</span>(x, <span class="fl">0.975</span>, <span class="at">na.rm=</span><span class="cn">TRUE</span>))</span>
+<span id="cb56-28"><a href="#cb56-28" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, ci_lower, <span class="at">col=</span><span class="st">"gray"</span>, <span class="at">lty=</span><span class="dv">2</span>)</span>
+<span id="cb56-29"><a href="#cb56-29" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, ci_upper, <span class="at">col=</span><span class="st">"gray"</span>, <span class="at">lty=</span><span class="dv">2</span>)</span>
+<span id="cb56-30"><a href="#cb56-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-31"><a href="#cb56-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Add legend</span></span>
+<span id="cb56-32"><a href="#cb56-32" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"bottomright"</span>, </span>
+<span id="cb56-33"><a href="#cb56-33" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend=</span><span class="fu">c</span>(<span class="st">"Random"</span>, <span class="st">"Average ROC"</span>, <span class="st">"95% CI"</span>, <span class="st">"Optimal Threshold"</span>),</span>
+<span id="cb56-34"><a href="#cb56-34" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="fu">c</span>(<span class="st">"black"</span>, <span class="st">"red"</span>, <span class="st">"gray"</span>, <span class="st">"blue"</span>), </span>
+<span id="cb56-35"><a href="#cb56-35" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="cn">NA</span>), </span>
+<span id="cb56-36"><a href="#cb56-36" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch=</span><span class="fu">c</span>(<span class="cn">NA</span>,<span class="cn">NA</span>,<span class="cn">NA</span>,<span class="dv">19</span>),</span>
+<span id="cb56-37"><a href="#cb56-37" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">1</span>,<span class="cn">NA</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="xgboost_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+
+
+<!-- -->
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb57" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "XGBoost Predictive Models"</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: true</span></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a><span class="in">```{r options, include=FALSE}</span></span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">max.print=</span><span class="dv">10000</span>)</span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)   </span>
+<span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a>outcome_data <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"predict_outcome.csv.gz"</span>)</span>
+<span id="cb57-19"><a href="#cb57-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-20"><a href="#cb57-20" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb57-21"><a href="#cb57-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-24"><a href="#cb57-24" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb57-25"><a href="#cb57-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Load library and prepare data</span></span>
+<span id="cb57-26"><a href="#cb57-26" aria-hidden="true" tabindex="-1"></a><span class="co">#library(randomForest)</span></span>
+<span id="cb57-27"><a href="#cb57-27" aria-hidden="true" tabindex="-1"></a><span class="co">#rf_data &lt;- copy(outcome_data)[, my_id := NULL]</span></span>
+<span id="cb57-28"><a href="#cb57-28" aria-hidden="true" tabindex="-1"></a><span class="co">#rf_data[, conversion := as.factor(conversion)]</span></span>
+<span id="cb57-29"><a href="#cb57-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-30"><a href="#cb57-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Run RF and get OOB AUC</span></span>
+<span id="cb57-31"><a href="#cb57-31" aria-hidden="true" tabindex="-1"></a><span class="co">#rf_model &lt;- randomForest(conversion ~ ., data = rf_data, ntree = 100, importance = TRUE)</span></span>
+<span id="cb57-32"><a href="#cb57-32" aria-hidden="true" tabindex="-1"></a><span class="co">#pred_oob &lt;- predict(rf_model, type = "prob")[,2]</span></span>
+<span id="cb57-33"><a href="#cb57-33" aria-hidden="true" tabindex="-1"></a><span class="co">#cat("\nOOB AUC:", as.numeric(performance(prediction(pred_oob, as.numeric(as.character(rf_data$conversion))), "auc")@y.values))</span></span>
+<span id="cb57-34"><a href="#cb57-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-35"><a href="#cb57-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter variables based on positive MDA</span></span>
+<span id="cb57-36"><a href="#cb57-36" aria-hidden="true" tabindex="-1"></a><span class="co">#mda_scores &lt;- importance(rf_model)[, "MeanDecreaseAccuracy"]</span></span>
+<span id="cb57-37"><a href="#cb57-37" aria-hidden="true" tabindex="-1"></a><span class="co">#keep_vars &lt;- unique(c(names(mda_scores[mda_scores &gt; 0]), "my_id", "conversion"))</span></span>
+<span id="cb57-38"><a href="#cb57-38" aria-hidden="true" tabindex="-1"></a><span class="co">#outcome_data &lt;- outcome_data[, .SD, .SDcols = keep_vars]</span></span>
+<span id="cb57-39"><a href="#cb57-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-40"><a href="#cb57-40" aria-hidden="true" tabindex="-1"></a><span class="co">#cat("\nVariables kept:", length(keep_vars), "out of", ncol(rf_data) + 1)</span></span>
+<span id="cb57-41"><a href="#cb57-41" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb57-42"><a href="#cb57-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-43"><a href="#cb57-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-44"><a href="#cb57-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-45"><a href="#cb57-45" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, warning=FALSE, message=FALSE}                        </span></span>
+<span id="cb57-46"><a href="#cb57-46" aria-hidden="true" tabindex="-1"></a><span class="co"># Load required libraries</span></span>
+<span id="cb57-47"><a href="#cb57-47" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)</span>
+<span id="cb57-48"><a href="#cb57-48" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ROCR)</span>
+<span id="cb57-49"><a href="#cb57-49" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(parallel)</span>
+<span id="cb57-50"><a href="#cb57-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-51"><a href="#cb57-51" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare the XGBoost matrices</span></span>
+<span id="cb57-52"><a href="#cb57-52" aria-hidden="true" tabindex="-1"></a>xs <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span> . <span class="sc">-</span> <span class="dv">1</span> <span class="sc">-</span> conversion <span class="sc">-</span> my_id, <span class="at">data =</span> outcome_data)</span>
+<span id="cb57-53"><a href="#cb57-53" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">as.character</span>(outcome_data<span class="sc">$</span>conversion))</span>
+<span id="cb57-54"><a href="#cb57-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-55"><a href="#cb57-55" aria-hidden="true" tabindex="-1"></a><span class="co"># Create parameter grid</span></span>
+<span id="cb57-56"><a href="#cb57-56" aria-hidden="true" tabindex="-1"></a>grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb57-57"><a href="#cb57-57" aria-hidden="true" tabindex="-1"></a>  <span class="at">eta =</span> <span class="fu">seq</span>(<span class="fl">0.001</span>, <span class="fl">0.1</span>, <span class="at">by =</span> <span class="fl">0.007</span>),</span>
+<span id="cb57-58"><a href="#cb57-58" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_depth =</span> <span class="fu">seq</span>(<span class="dv">7</span>, <span class="dv">7</span>, <span class="at">by =</span> <span class="dv">2</span>),</span>
+<span id="cb57-59"><a href="#cb57-59" aria-hidden="true" tabindex="-1"></a>  <span class="at">min_child_weight =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="dv">1</span>),        </span>
+<span id="cb57-60"><a href="#cb57-60" aria-hidden="true" tabindex="-1"></a>  <span class="at">subsample =</span> <span class="fu">seq</span>(<span class="fl">0.8</span>, <span class="fl">0.8</span>, <span class="at">by =</span> <span class="fl">0.2</span>),</span>
+<span id="cb57-61"><a href="#cb57-61" aria-hidden="true" tabindex="-1"></a>  <span class="at">colsample_bytree =</span> <span class="fu">seq</span>(<span class="fl">0.8</span>, <span class="fl">0.8</span>, <span class="at">by =</span> <span class="fl">0.2</span>),</span>
+<span id="cb57-62"><a href="#cb57-62" aria-hidden="true" tabindex="-1"></a>  <span class="at">lambda =</span> <span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="dv">1</span>),                </span>
+<span id="cb57-63"><a href="#cb57-63" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="at">by =</span> <span class="dv">1</span>),                  </span>
+<span id="cb57-64"><a href="#cb57-64" aria-hidden="true" tabindex="-1"></a>  <span class="at">gamma =</span> <span class="fu">seq</span>(<span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="at">by =</span> <span class="fl">0.1</span>),               </span>
+<span id="cb57-65"><a href="#cb57-65" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrounds =</span> <span class="fu">seq</span>(<span class="dv">100</span>, <span class="dv">400</span>, <span class="at">by =</span> <span class="dv">200</span>)</span>
+<span id="cb57-66"><a href="#cb57-66" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb57-67"><a href="#cb57-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-68"><a href="#cb57-68" aria-hidden="true" tabindex="-1"></a><span class="co"># Sample grid points</span></span>
+<span id="cb57-69"><a href="#cb57-69" aria-hidden="true" tabindex="-1"></a>conf_lev <span class="ot">&lt;-</span> .<span class="dv">95</span></span>
+<span id="cb57-70"><a href="#cb57-70" aria-hidden="true" tabindex="-1"></a>num_max <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb57-71"><a href="#cb57-71" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(<span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span>conf_lev)<span class="sc">/</span><span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span>num_max<span class="sc">/</span><span class="fu">nrow</span>(grid)))</span>
+<span id="cb57-72"><a href="#cb57-72" aria-hidden="true" tabindex="-1"></a>ind <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">nrow</span>(grid), n, <span class="at">replace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb57-73"><a href="#cb57-73" aria-hidden="true" tabindex="-1"></a>rgrid <span class="ot">&lt;-</span> grid[ind, ]</span>
+<span id="cb57-74"><a href="#cb57-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-75"><a href="#cb57-75" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up parallel processing</span></span>
+<span id="cb57-76"><a href="#cb57-76" aria-hidden="true" tabindex="-1"></a>nc <span class="ot">&lt;-</span> <span class="fu">detectCores</span>() <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb57-77"><a href="#cb57-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-78"><a href="#cb57-78" aria-hidden="true" tabindex="-1"></a><span class="co"># Validation phase</span></span>
+<span id="cb57-79"><a href="#cb57-79" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Phase 1: Validation Phase</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-80"><a href="#cb57-80" aria-hidden="true" tabindex="-1"></a>n_validations <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb57-81"><a href="#cb57-81" aria-hidden="true" tabindex="-1"></a>validation_results <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> <span class="fu">nrow</span>(rgrid), <span class="at">ncol =</span> n_validations)</span>
+<span id="cb57-82"><a href="#cb57-82" aria-hidden="true" tabindex="-1"></a>validation_j_stats <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> <span class="fu">nrow</span>(rgrid), <span class="at">ncol =</span> n_validations)</span>
+<span id="cb57-83"><a href="#cb57-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-84"><a href="#cb57-84" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(rgrid)) {</span>
+<span id="cb57-85"><a href="#cb57-85" aria-hidden="true" tabindex="-1"></a> <span class="co"># cat("\nTesting parameter set", j, "of", nrow(rgrid), "\n")</span></span>
+<span id="cb57-86"><a href="#cb57-86" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("eta =", rgrid[j, "eta"], ", nrounds =", rgrid[j, "nrounds"], "\n")</span></span>
+<span id="cb57-87"><a href="#cb57-87" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-88"><a href="#cb57-88" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_validations) {</span>
+<span id="cb57-89"><a href="#cb57-89" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create validation split</span></span>
+<span id="cb57-90"><a href="#cb57-90" aria-hidden="true" tabindex="-1"></a>    idx <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">sample</span>(<span class="fu">nrow</span>(xs), <span class="fu">nrow</span>(xs), T))</span>
+<span id="cb57-91"><a href="#cb57-91" aria-hidden="true" tabindex="-1"></a>    train_x <span class="ot">&lt;-</span> xs[idx, ]</span>
+<span id="cb57-92"><a href="#cb57-92" aria-hidden="true" tabindex="-1"></a>    train_y <span class="ot">&lt;-</span> y[idx]</span>
+<span id="cb57-93"><a href="#cb57-93" aria-hidden="true" tabindex="-1"></a>    val_x <span class="ot">&lt;-</span> xs[<span class="sc">-</span>idx, ]</span>
+<span id="cb57-94"><a href="#cb57-94" aria-hidden="true" tabindex="-1"></a>    val_y <span class="ot">&lt;-</span> y[<span class="sc">-</span>idx]</span>
+<span id="cb57-95"><a href="#cb57-95" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb57-96"><a href="#cb57-96" aria-hidden="true" tabindex="-1"></a>    prm <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb57-97"><a href="#cb57-97" aria-hidden="true" tabindex="-1"></a>      <span class="at">booster =</span> <span class="st">"gbtree"</span>,</span>
+<span id="cb57-98"><a href="#cb57-98" aria-hidden="true" tabindex="-1"></a>      <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
+<span id="cb57-99"><a href="#cb57-99" aria-hidden="true" tabindex="-1"></a>      <span class="at">max_depth =</span> rgrid[j, <span class="st">"max_depth"</span>],</span>
+<span id="cb57-100"><a href="#cb57-100" aria-hidden="true" tabindex="-1"></a>      <span class="at">eta =</span> rgrid[j, <span class="st">"eta"</span>],</span>
+<span id="cb57-101"><a href="#cb57-101" aria-hidden="true" tabindex="-1"></a>      <span class="at">subsample =</span> rgrid[j, <span class="st">"subsample"</span>],</span>
+<span id="cb57-102"><a href="#cb57-102" aria-hidden="true" tabindex="-1"></a>      <span class="at">colsample_bytree =</span> rgrid[j, <span class="st">"colsample_bytree"</span>],</span>
+<span id="cb57-103"><a href="#cb57-103" aria-hidden="true" tabindex="-1"></a>      <span class="at">gamma =</span> rgrid[j, <span class="st">"gamma"</span>],</span>
+<span id="cb57-104"><a href="#cb57-104" aria-hidden="true" tabindex="-1"></a>      <span class="at">min_child_weight =</span> rgrid[j, <span class="st">"min_child_weight"</span>],</span>
+<span id="cb57-105"><a href="#cb57-105" aria-hidden="true" tabindex="-1"></a>      <span class="at">alpha =</span> rgrid[j, <span class="st">"alpha"</span>],</span>
+<span id="cb57-106"><a href="#cb57-106" aria-hidden="true" tabindex="-1"></a>      <span class="at">lambda =</span> rgrid[j, <span class="st">"lambda"</span>],</span>
+<span id="cb57-107"><a href="#cb57-107" aria-hidden="true" tabindex="-1"></a>      <span class="at">nthread =</span> nc</span>
+<span id="cb57-108"><a href="#cb57-108" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb57-109"><a href="#cb57-109" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb57-110"><a href="#cb57-110" aria-hidden="true" tabindex="-1"></a>    dm_train <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> train_x, <span class="at">label =</span> train_y)</span>
+<span id="cb57-111"><a href="#cb57-111" aria-hidden="true" tabindex="-1"></a>    mdl <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb57-112"><a href="#cb57-112" aria-hidden="true" tabindex="-1"></a>      <span class="at">params =</span> prm,</span>
+<span id="cb57-113"><a href="#cb57-113" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> dm_train,</span>
+<span id="cb57-114"><a href="#cb57-114" aria-hidden="true" tabindex="-1"></a>      <span class="at">nrounds =</span> rgrid[j, <span class="st">"nrounds"</span>],</span>
+<span id="cb57-115"><a href="#cb57-115" aria-hidden="true" tabindex="-1"></a>      <span class="at">verbose =</span> <span class="cn">FALSE</span></span>
+<span id="cb57-116"><a href="#cb57-116" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb57-117"><a href="#cb57-117" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb57-118"><a href="#cb57-118" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get predictions and ROC metrics</span></span>
+<span id="cb57-119"><a href="#cb57-119" aria-hidden="true" tabindex="-1"></a>    p <span class="ot">&lt;-</span> <span class="fu">predict</span>(mdl, <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> val_x))</span>
+<span id="cb57-120"><a href="#cb57-120" aria-hidden="true" tabindex="-1"></a>    pred <span class="ot">&lt;-</span> <span class="fu">prediction</span>(p, val_y)</span>
+<span id="cb57-121"><a href="#cb57-121" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb57-122"><a href="#cb57-122" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate AUC</span></span>
+<span id="cb57-123"><a href="#cb57-123" aria-hidden="true" tabindex="-1"></a>    validation_results[j, i] <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"auc"</span>)<span class="sc">@</span>y.values[[<span class="dv">1</span>]]</span>
+<span id="cb57-124"><a href="#cb57-124" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb57-125"><a href="#cb57-125" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate Youden's J Statistic</span></span>
+<span id="cb57-126"><a href="#cb57-126" aria-hidden="true" tabindex="-1"></a>    roc <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"tpr"</span>, <span class="st">"fpr"</span>)</span>
+<span id="cb57-127"><a href="#cb57-127" aria-hidden="true" tabindex="-1"></a>    tpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(roc<span class="sc">@</span>y.values)</span>
+<span id="cb57-128"><a href="#cb57-128" aria-hidden="true" tabindex="-1"></a>    fpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(roc<span class="sc">@</span>x.values)</span>
+<span id="cb57-129"><a href="#cb57-129" aria-hidden="true" tabindex="-1"></a>    j_stats <span class="ot">&lt;-</span> tpr <span class="sc">-</span> fpr</span>
+<span id="cb57-130"><a href="#cb57-130" aria-hidden="true" tabindex="-1"></a>    validation_j_stats[j, i] <span class="ot">&lt;-</span> <span class="fu">max</span>(j_stats)</span>
+<span id="cb57-131"><a href="#cb57-131" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb57-132"><a href="#cb57-132" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-133"><a href="#cb57-133" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("Mean AUC:", mean(validation_results[j,]), "\n")</span></span>
+<span id="cb57-134"><a href="#cb57-134" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("SD AUC:", sd(validation_results[j,]), "\n")</span></span>
+<span id="cb57-135"><a href="#cb57-135" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("Mean J statistic:", mean(validation_j_stats[j,]), "\n")</span></span>
+<span id="cb57-136"><a href="#cb57-136" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb57-137"><a href="#cb57-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-138"><a href="#cb57-138" aria-hidden="true" tabindex="-1"></a><span class="co"># Select best parameters based on validation AUC</span></span>
+<span id="cb57-139"><a href="#cb57-139" aria-hidden="true" tabindex="-1"></a>best_params_idx <span class="ot">&lt;-</span> <span class="fu">which.max</span>(<span class="fu">rowMeans</span>(validation_results))</span>
+<span id="cb57-140"><a href="#cb57-140" aria-hidden="true" tabindex="-1"></a>best_params <span class="ot">&lt;-</span> rgrid[best_params_idx,]</span>
+<span id="cb57-141"><a href="#cb57-141" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Best parameters:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-142"><a href="#cb57-142" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(best_params)</span>
+<span id="cb57-143"><a href="#cb57-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-144"><a href="#cb57-144" aria-hidden="true" tabindex="-1"></a><span class="co"># Run 100 tests with best parameters</span></span>
+<span id="cb57-145"><a href="#cb57-145" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Running 100 test iterations with best parameters...</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-146"><a href="#cb57-146" aria-hidden="true" tabindex="-1"></a>test_aucs <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">100</span>)</span>
+<span id="cb57-147"><a href="#cb57-147" aria-hidden="true" tabindex="-1"></a>test_j_stats <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">100</span>)</span>
+<span id="cb57-148"><a href="#cb57-148" aria-hidden="true" tabindex="-1"></a>confusion_matrices <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb57-149"><a href="#cb57-149" aria-hidden="true" tabindex="-1"></a>performance_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb57-150"><a href="#cb57-150" aria-hidden="true" tabindex="-1"></a>all_thresholds <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">100</span>)</span>
+<span id="cb57-151"><a href="#cb57-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-152"><a href="#cb57-152" aria-hidden="true" tabindex="-1"></a><span class="co"># Train final model with best parameters</span></span>
+<span id="cb57-153"><a href="#cb57-153" aria-hidden="true" tabindex="-1"></a>best_params_list <span class="ot">&lt;-</span> <span class="fu">as.list</span>(best_params[<span class="sc">-</span><span class="fu">which</span>(<span class="fu">names</span>(best_params) <span class="sc">==</span> <span class="st">"nrounds"</span>)])</span>
+<span id="cb57-154"><a href="#cb57-154" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>booster <span class="ot">&lt;-</span> <span class="st">"gbtree"</span></span>
+<span id="cb57-155"><a href="#cb57-155" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>objective <span class="ot">&lt;-</span> <span class="st">"binary:logistic"</span></span>
+<span id="cb57-156"><a href="#cb57-156" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>nthread <span class="ot">&lt;-</span> nc</span>
+<span id="cb57-157"><a href="#cb57-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-158"><a href="#cb57-158" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>) {</span>
+<span id="cb57-159"><a href="#cb57-159" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("\nIteration", i, "of 100\n")       </span></span>
+<span id="cb57-160"><a href="#cb57-160" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Create test split</span></span>
+<span id="cb57-161"><a href="#cb57-161" aria-hidden="true" tabindex="-1"></a>  idx <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">sample</span>(<span class="fu">nrow</span>(xs), <span class="fu">nrow</span>(xs), T))</span>
+<span id="cb57-162"><a href="#cb57-162" aria-hidden="true" tabindex="-1"></a>  train_x <span class="ot">&lt;-</span> xs[idx, ]</span>
+<span id="cb57-163"><a href="#cb57-163" aria-hidden="true" tabindex="-1"></a>  train_y <span class="ot">&lt;-</span> y[idx]</span>
+<span id="cb57-164"><a href="#cb57-164" aria-hidden="true" tabindex="-1"></a>  test_x <span class="ot">&lt;-</span> xs[<span class="sc">-</span>idx, ]</span>
+<span id="cb57-165"><a href="#cb57-165" aria-hidden="true" tabindex="-1"></a>  test_y <span class="ot">&lt;-</span> y[<span class="sc">-</span>idx]</span>
+<span id="cb57-166"><a href="#cb57-166" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-167"><a href="#cb57-167" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Train model</span></span>
+<span id="cb57-168"><a href="#cb57-168" aria-hidden="true" tabindex="-1"></a>  dm_train <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> train_x, <span class="at">label =</span> train_y)</span>
+<span id="cb57-169"><a href="#cb57-169" aria-hidden="true" tabindex="-1"></a>  mdl <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb57-170"><a href="#cb57-170" aria-hidden="true" tabindex="-1"></a>    <span class="at">params =</span> best_params_list,</span>
+<span id="cb57-171"><a href="#cb57-171" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> dm_train,</span>
+<span id="cb57-172"><a href="#cb57-172" aria-hidden="true" tabindex="-1"></a>    <span class="at">nrounds =</span> best_params[[<span class="st">"nrounds"</span>]],</span>
+<span id="cb57-173"><a href="#cb57-173" aria-hidden="true" tabindex="-1"></a>    <span class="at">verbose =</span> <span class="cn">FALSE</span></span>
+<span id="cb57-174"><a href="#cb57-174" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb57-175"><a href="#cb57-175" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-176"><a href="#cb57-176" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Get predictions</span></span>
+<span id="cb57-177"><a href="#cb57-177" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">predict</span>(mdl, <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> test_x))</span>
+<span id="cb57-178"><a href="#cb57-178" aria-hidden="true" tabindex="-1"></a>  pred <span class="ot">&lt;-</span> <span class="fu">prediction</span>(p, test_y)</span>
+<span id="cb57-179"><a href="#cb57-179" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-180"><a href="#cb57-180" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate AUC</span></span>
+<span id="cb57-181"><a href="#cb57-181" aria-hidden="true" tabindex="-1"></a>  test_aucs[i] <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"auc"</span>)<span class="sc">@</span>y.values[[<span class="dv">1</span>]]</span>
+<span id="cb57-182"><a href="#cb57-182" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-183"><a href="#cb57-183" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate ROC curve and store</span></span>
+<span id="cb57-184"><a href="#cb57-184" aria-hidden="true" tabindex="-1"></a>  perf <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"tpr"</span>, <span class="st">"fpr"</span>)</span>
+<span id="cb57-185"><a href="#cb57-185" aria-hidden="true" tabindex="-1"></a>  performance_list[[i]] <span class="ot">&lt;-</span> perf</span>
+<span id="cb57-186"><a href="#cb57-186" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-187"><a href="#cb57-187" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Find optimal threshold using Youden's J statistic</span></span>
+<span id="cb57-188"><a href="#cb57-188" aria-hidden="true" tabindex="-1"></a>  tpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>y.values)</span>
+<span id="cb57-189"><a href="#cb57-189" aria-hidden="true" tabindex="-1"></a>  fpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>x.values)</span>
+<span id="cb57-190"><a href="#cb57-190" aria-hidden="true" tabindex="-1"></a>  j_stats <span class="ot">&lt;-</span> tpr <span class="sc">-</span> fpr</span>
+<span id="cb57-191"><a href="#cb57-191" aria-hidden="true" tabindex="-1"></a>  best_j_idx <span class="ot">&lt;-</span> <span class="fu">which.max</span>(j_stats)</span>
+<span id="cb57-192"><a href="#cb57-192" aria-hidden="true" tabindex="-1"></a>  optimal_threshold <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>alpha.values)[best_j_idx]</span>
+<span id="cb57-193"><a href="#cb57-193" aria-hidden="true" tabindex="-1"></a>  all_thresholds[i] <span class="ot">&lt;-</span> optimal_threshold</span>
+<span id="cb57-194"><a href="#cb57-194" aria-hidden="true" tabindex="-1"></a>  test_j_stats[i] <span class="ot">&lt;-</span> j_stats[best_j_idx]</span>
+<span id="cb57-195"><a href="#cb57-195" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-196"><a href="#cb57-196" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Create confusion matrix with optimal threshold (1-0 order with TP in top left)</span></span>
+<span id="cb57-197"><a href="#cb57-197" aria-hidden="true" tabindex="-1"></a>  pred_class <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(p <span class="sc">&gt;=</span> optimal_threshold, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb57-198"><a href="#cb57-198" aria-hidden="true" tabindex="-1"></a>  cm <span class="ot">&lt;-</span> <span class="fu">table</span>(<span class="fu">factor</span>(test_y, <span class="at">levels=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)), </span>
+<span id="cb57-199"><a href="#cb57-199" aria-hidden="true" tabindex="-1"></a>             <span class="fu">factor</span>(pred_class, <span class="at">levels=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)))</span>
+<span id="cb57-200"><a href="#cb57-200" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(cm) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Pred 1"</span>, <span class="st">"Pred 0"</span>)</span>
+<span id="cb57-201"><a href="#cb57-201" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(cm) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"True 1"</span>, <span class="st">"True 0"</span>)</span>
+<span id="cb57-202"><a href="#cb57-202" aria-hidden="true" tabindex="-1"></a>  confusion_matrices[[i]] <span class="ot">&lt;-</span> cm</span>
+<span id="cb57-203"><a href="#cb57-203" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb57-204"><a href="#cb57-204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-205"><a href="#cb57-205" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate average confusion matrix</span></span>
+<span id="cb57-206"><a href="#cb57-206" aria-hidden="true" tabindex="-1"></a>avg_cm <span class="ot">&lt;-</span> <span class="fu">Reduce</span>(<span class="st">'+'</span>, confusion_matrices) <span class="sc">/</span> <span class="fu">length</span>(confusion_matrices)</span>
+<span id="cb57-207"><a href="#cb57-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-208"><a href="#cb57-208" aria-hidden="true" tabindex="-1"></a><span class="co"># Print final results</span></span>
+<span id="cb57-209"><a href="#cb57-209" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Test Results over 100 iterations:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-210"><a href="#cb57-210" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean AUC:"</span>, <span class="fu">mean</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-211"><a href="#cb57-211" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SD AUC:"</span>, <span class="fu">sd</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-212"><a href="#cb57-212" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean Youden's J:"</span>, <span class="fu">mean</span>(test_j_stats), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-213"><a href="#cb57-213" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SD Youden's J:"</span>, <span class="fu">sd</span>(test_j_stats), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-214"><a href="#cb57-214" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean Optimal Threshold:"</span>, <span class="fu">mean</span>(all_thresholds), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-215"><a href="#cb57-215" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"95% CI for AUC:"</span>, <span class="fu">mean</span>(test_aucs) <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(test_aucs), </span>
+<span id="cb57-216"><a href="#cb57-216" aria-hidden="true" tabindex="-1"></a>    <span class="st">"to"</span>, <span class="fu">mean</span>(test_aucs) <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-217"><a href="#cb57-217" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Average Confusion Matrix:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-218"><a href="#cb57-218" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(avg_cm)</span>
+<span id="cb57-219"><a href="#cb57-219" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-220"><a href="#cb57-220" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot ROC curve with confidence intervals</span></span>
+<span id="cb57-221"><a href="#cb57-221" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">100</span><span class="sc">/</span><span class="dv">100</span>, <span class="dv">0</span><span class="sc">:</span><span class="dv">100</span><span class="sc">/</span><span class="dv">100</span>, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lty=</span><span class="dv">2</span>, </span>
+<span id="cb57-222"><a href="#cb57-222" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"False Positive Rate"</span>, <span class="at">ylab=</span><span class="st">"True Positive Rate"</span>,</span>
+<span id="cb57-223"><a href="#cb57-223" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"ROC Curve"</span>)</span>
+<span id="cb57-224"><a href="#cb57-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-225"><a href="#cb57-225" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate average ROC curve with confidence intervals</span></span>
+<span id="cb57-226"><a href="#cb57-226" aria-hidden="true" tabindex="-1"></a>fpr_grid <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">100</span>)</span>
+<span id="cb57-227"><a href="#cb57-227" aria-hidden="true" tabindex="-1"></a>tpr_matrix <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="cn">NA</span>, <span class="at">nrow =</span> <span class="fu">length</span>(performance_list), <span class="at">ncol =</span> <span class="fu">length</span>(fpr_grid))</span>
+<span id="cb57-228"><a href="#cb57-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-229"><a href="#cb57-229" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">seq_along</span>(performance_list)) {</span>
+<span id="cb57-230"><a href="#cb57-230" aria-hidden="true" tabindex="-1"></a>  curve_i <span class="ot">&lt;-</span> performance_list[[i]]</span>
+<span id="cb57-231"><a href="#cb57-231" aria-hidden="true" tabindex="-1"></a>  tpr_matrix[i,] <span class="ot">&lt;-</span> <span class="fu">approx</span>(curve_i<span class="sc">@</span>x.values[[<span class="dv">1</span>]], </span>
+<span id="cb57-232"><a href="#cb57-232" aria-hidden="true" tabindex="-1"></a>                          curve_i<span class="sc">@</span>y.values[[<span class="dv">1</span>]], </span>
+<span id="cb57-233"><a href="#cb57-233" aria-hidden="true" tabindex="-1"></a>                          <span class="at">xout =</span> fpr_grid)<span class="sc">$</span>y</span>
+<span id="cb57-234"><a href="#cb57-234" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb57-235"><a href="#cb57-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-236"><a href="#cb57-236" aria-hidden="true" tabindex="-1"></a>mean_tpr <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(tpr_matrix, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb57-237"><a href="#cb57-237" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, mean_tpr, <span class="at">col=</span><span class="st">"red"</span>, <span class="at">lwd=</span><span class="dv">2</span>)</span>
+<span id="cb57-238"><a href="#cb57-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-239"><a href="#cb57-239" aria-hidden="true" tabindex="-1"></a><span class="co"># Add optimal threshold point</span></span>
+<span id="cb57-240"><a href="#cb57-240" aria-hidden="true" tabindex="-1"></a>opt_point_idx <span class="ot">&lt;-</span> <span class="fu">which.min</span>(<span class="fu">abs</span>(fpr_grid <span class="sc">-</span> <span class="fu">mean</span>(all_thresholds)))</span>
+<span id="cb57-241"><a href="#cb57-241" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(fpr_grid[opt_point_idx], mean_tpr[opt_point_idx], </span>
+<span id="cb57-242"><a href="#cb57-242" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="st">"blue"</span>, <span class="at">pch=</span><span class="dv">19</span>, <span class="at">cex=</span><span class="fl">1.5</span>)</span>
+<span id="cb57-243"><a href="#cb57-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-244"><a href="#cb57-244" aria-hidden="true" tabindex="-1"></a><span class="co"># Add confidence interval</span></span>
+<span id="cb57-245"><a href="#cb57-245" aria-hidden="true" tabindex="-1"></a>ci_lower <span class="ot">&lt;-</span> <span class="fu">apply</span>(tpr_matrix, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="fu">quantile</span>(x, <span class="fl">0.025</span>, <span class="at">na.rm=</span><span class="cn">TRUE</span>))</span>
+<span id="cb57-246"><a href="#cb57-246" aria-hidden="true" tabindex="-1"></a>ci_upper <span class="ot">&lt;-</span> <span class="fu">apply</span>(tpr_matrix, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="fu">quantile</span>(x, <span class="fl">0.975</span>, <span class="at">na.rm=</span><span class="cn">TRUE</span>))</span>
+<span id="cb57-247"><a href="#cb57-247" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, ci_lower, <span class="at">col=</span><span class="st">"gray"</span>, <span class="at">lty=</span><span class="dv">2</span>)</span>
+<span id="cb57-248"><a href="#cb57-248" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, ci_upper, <span class="at">col=</span><span class="st">"gray"</span>, <span class="at">lty=</span><span class="dv">2</span>)</span>
+<span id="cb57-249"><a href="#cb57-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-250"><a href="#cb57-250" aria-hidden="true" tabindex="-1"></a><span class="co"># Add legend</span></span>
+<span id="cb57-251"><a href="#cb57-251" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"bottomright"</span>, </span>
+<span id="cb57-252"><a href="#cb57-252" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend=</span><span class="fu">c</span>(<span class="st">"Random"</span>, <span class="st">"Average ROC"</span>, <span class="st">"95% CI"</span>, <span class="st">"Optimal Threshold"</span>),</span>
+<span id="cb57-253"><a href="#cb57-253" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="fu">c</span>(<span class="st">"black"</span>, <span class="st">"red"</span>, <span class="st">"gray"</span>, <span class="st">"blue"</span>), </span>
+<span id="cb57-254"><a href="#cb57-254" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="cn">NA</span>), </span>
+<span id="cb57-255"><a href="#cb57-255" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch=</span><span class="fu">c</span>(<span class="cn">NA</span>,<span class="cn">NA</span>,<span class="cn">NA</span>,<span class="dv">19</span>),</span>
+<span id="cb57-256"><a href="#cb57-256" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">1</span>,<span class="cn">NA</span>))</span>
+<span id="cb57-257"><a href="#cb57-257" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb57-258"><a href="#cb57-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-259"><a href="#cb57-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-260"><a href="#cb57-260" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, warning=FALSE, message=FALSE}</span></span>
+<span id="cb57-261"><a href="#cb57-261" aria-hidden="true" tabindex="-1"></a><span class="co"># Load required libraries</span></span>
+<span id="cb57-262"><a href="#cb57-262" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb57-263"><a href="#cb57-263" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)</span>
+<span id="cb57-264"><a href="#cb57-264" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ROCR)</span>
+<span id="cb57-265"><a href="#cb57-265" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(parallel)</span>
+<span id="cb57-266"><a href="#cb57-266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-267"><a href="#cb57-267" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare the XGBoost matrices</span></span>
+<span id="cb57-268"><a href="#cb57-268" aria-hidden="true" tabindex="-1"></a>xs <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span> . <span class="sc">-</span> <span class="dv">1</span> <span class="sc">-</span> conversion <span class="sc">-</span> my_id, <span class="at">data =</span> outcome_data)</span>
+<span id="cb57-269"><a href="#cb57-269" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">as.character</span>(outcome_data<span class="sc">$</span>conversion))</span>
+<span id="cb57-270"><a href="#cb57-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-271"><a href="#cb57-271" aria-hidden="true" tabindex="-1"></a><span class="co"># Create parameter grid - only tune eta and nrounds</span></span>
+<span id="cb57-272"><a href="#cb57-272" aria-hidden="true" tabindex="-1"></a>grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb57-273"><a href="#cb57-273" aria-hidden="true" tabindex="-1"></a>  <span class="at">eta =</span> <span class="fu">seq</span>(<span class="fl">0.001</span>, <span class="fl">0.1</span>, <span class="at">by =</span> <span class="fl">0.03</span>),</span>
+<span id="cb57-274"><a href="#cb57-274" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrounds =</span> <span class="fu">seq</span>(<span class="dv">50</span>, <span class="dv">500</span>, <span class="at">by =</span> <span class="dv">100</span>)</span>
+<span id="cb57-275"><a href="#cb57-275" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb57-276"><a href="#cb57-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-277"><a href="#cb57-277" aria-hidden="true" tabindex="-1"></a><span class="co"># Sample grid points</span></span>
+<span id="cb57-278"><a href="#cb57-278" aria-hidden="true" tabindex="-1"></a>conf_lev <span class="ot">&lt;-</span> .<span class="dv">95</span></span>
+<span id="cb57-279"><a href="#cb57-279" aria-hidden="true" tabindex="-1"></a>num_max <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb57-280"><a href="#cb57-280" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(<span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span>conf_lev)<span class="sc">/</span><span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span>num_max<span class="sc">/</span><span class="fu">nrow</span>(grid)))</span>
+<span id="cb57-281"><a href="#cb57-281" aria-hidden="true" tabindex="-1"></a>ind <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">nrow</span>(grid), n, <span class="at">replace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb57-282"><a href="#cb57-282" aria-hidden="true" tabindex="-1"></a>rgrid <span class="ot">&lt;-</span> grid[ind, ]</span>
+<span id="cb57-283"><a href="#cb57-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-284"><a href="#cb57-284" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up parallel processing</span></span>
+<span id="cb57-285"><a href="#cb57-285" aria-hidden="true" tabindex="-1"></a>nc <span class="ot">&lt;-</span> <span class="fu">detectCores</span>() <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb57-286"><a href="#cb57-286" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-287"><a href="#cb57-287" aria-hidden="true" tabindex="-1"></a><span class="co"># Validation phase</span></span>
+<span id="cb57-288"><a href="#cb57-288" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Phase 1: Validation Phase</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-289"><a href="#cb57-289" aria-hidden="true" tabindex="-1"></a>n_validations <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb57-290"><a href="#cb57-290" aria-hidden="true" tabindex="-1"></a>validation_results <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> <span class="fu">nrow</span>(rgrid), <span class="at">ncol =</span> n_validations)</span>
+<span id="cb57-291"><a href="#cb57-291" aria-hidden="true" tabindex="-1"></a>validation_j_stats <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">nrow =</span> <span class="fu">nrow</span>(rgrid), <span class="at">ncol =</span> n_validations)</span>
+<span id="cb57-292"><a href="#cb57-292" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-293"><a href="#cb57-293" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(rgrid)) {</span>
+<span id="cb57-294"><a href="#cb57-294" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("\nTesting parameter set", j, "of", nrow(rgrid), "\n")</span></span>
+<span id="cb57-295"><a href="#cb57-295" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("eta =", rgrid[j, "eta"], ", nrounds =", rgrid[j, "nrounds"], "\n")</span></span>
+<span id="cb57-296"><a href="#cb57-296" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-297"><a href="#cb57-297" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n_validations) {</span>
+<span id="cb57-298"><a href="#cb57-298" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create validation split</span></span>
+<span id="cb57-299"><a href="#cb57-299" aria-hidden="true" tabindex="-1"></a>    idx <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">sample</span>(<span class="fu">nrow</span>(xs), <span class="fu">nrow</span>(xs), T))</span>
+<span id="cb57-300"><a href="#cb57-300" aria-hidden="true" tabindex="-1"></a>    train_x <span class="ot">&lt;-</span> xs[idx, ]</span>
+<span id="cb57-301"><a href="#cb57-301" aria-hidden="true" tabindex="-1"></a>    train_y <span class="ot">&lt;-</span> y[idx]</span>
+<span id="cb57-302"><a href="#cb57-302" aria-hidden="true" tabindex="-1"></a>    val_x <span class="ot">&lt;-</span> xs[<span class="sc">-</span>idx, ]</span>
+<span id="cb57-303"><a href="#cb57-303" aria-hidden="true" tabindex="-1"></a>    val_y <span class="ot">&lt;-</span> y[<span class="sc">-</span>idx]</span>
+<span id="cb57-304"><a href="#cb57-304" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb57-305"><a href="#cb57-305" aria-hidden="true" tabindex="-1"></a>    prm <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb57-306"><a href="#cb57-306" aria-hidden="true" tabindex="-1"></a>      <span class="at">booster =</span> <span class="st">"gblinear"</span>,</span>
+<span id="cb57-307"><a href="#cb57-307" aria-hidden="true" tabindex="-1"></a>      <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
+<span id="cb57-308"><a href="#cb57-308" aria-hidden="true" tabindex="-1"></a>      <span class="at">eta =</span> rgrid[j, <span class="st">"eta"</span>],</span>
+<span id="cb57-309"><a href="#cb57-309" aria-hidden="true" tabindex="-1"></a>      <span class="at">nthread =</span> nc</span>
+<span id="cb57-310"><a href="#cb57-310" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb57-311"><a href="#cb57-311" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb57-312"><a href="#cb57-312" aria-hidden="true" tabindex="-1"></a>    dm_train <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> train_x, <span class="at">label =</span> train_y)</span>
+<span id="cb57-313"><a href="#cb57-313" aria-hidden="true" tabindex="-1"></a>    mdl <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb57-314"><a href="#cb57-314" aria-hidden="true" tabindex="-1"></a>      <span class="at">params =</span> prm,</span>
+<span id="cb57-315"><a href="#cb57-315" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> dm_train,</span>
+<span id="cb57-316"><a href="#cb57-316" aria-hidden="true" tabindex="-1"></a>      <span class="at">nrounds =</span> rgrid[j, <span class="st">"nrounds"</span>],</span>
+<span id="cb57-317"><a href="#cb57-317" aria-hidden="true" tabindex="-1"></a>      <span class="at">verbose =</span> <span class="cn">FALSE</span></span>
+<span id="cb57-318"><a href="#cb57-318" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb57-319"><a href="#cb57-319" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb57-320"><a href="#cb57-320" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get predictions and ROC metrics</span></span>
+<span id="cb57-321"><a href="#cb57-321" aria-hidden="true" tabindex="-1"></a>    p <span class="ot">&lt;-</span> <span class="fu">predict</span>(mdl, <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> val_x))</span>
+<span id="cb57-322"><a href="#cb57-322" aria-hidden="true" tabindex="-1"></a>    pred <span class="ot">&lt;-</span> <span class="fu">prediction</span>(p, val_y)</span>
+<span id="cb57-323"><a href="#cb57-323" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb57-324"><a href="#cb57-324" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate AUC</span></span>
+<span id="cb57-325"><a href="#cb57-325" aria-hidden="true" tabindex="-1"></a>    validation_results[j, i] <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"auc"</span>)<span class="sc">@</span>y.values[[<span class="dv">1</span>]]</span>
+<span id="cb57-326"><a href="#cb57-326" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb57-327"><a href="#cb57-327" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate Youden's J Statistic</span></span>
+<span id="cb57-328"><a href="#cb57-328" aria-hidden="true" tabindex="-1"></a>    roc <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"tpr"</span>, <span class="st">"fpr"</span>)</span>
+<span id="cb57-329"><a href="#cb57-329" aria-hidden="true" tabindex="-1"></a>    tpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(roc<span class="sc">@</span>y.values)</span>
+<span id="cb57-330"><a href="#cb57-330" aria-hidden="true" tabindex="-1"></a>    fpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(roc<span class="sc">@</span>x.values)</span>
+<span id="cb57-331"><a href="#cb57-331" aria-hidden="true" tabindex="-1"></a>    j_stats <span class="ot">&lt;-</span> tpr <span class="sc">-</span> fpr</span>
+<span id="cb57-332"><a href="#cb57-332" aria-hidden="true" tabindex="-1"></a>    validation_j_stats[j, i] <span class="ot">&lt;-</span> <span class="fu">max</span>(j_stats)</span>
+<span id="cb57-333"><a href="#cb57-333" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb57-334"><a href="#cb57-334" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-335"><a href="#cb57-335" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("Mean AUC:", mean(validation_results[j,]), "\n")</span></span>
+<span id="cb57-336"><a href="#cb57-336" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("SD AUC:", sd(validation_results[j,]), "\n")</span></span>
+<span id="cb57-337"><a href="#cb57-337" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("Mean J statistic:", mean(validation_j_stats[j,]), "\n")</span></span>
+<span id="cb57-338"><a href="#cb57-338" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb57-339"><a href="#cb57-339" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-340"><a href="#cb57-340" aria-hidden="true" tabindex="-1"></a><span class="co"># Select best parameters based on validation AUC</span></span>
+<span id="cb57-341"><a href="#cb57-341" aria-hidden="true" tabindex="-1"></a>best_params_idx <span class="ot">&lt;-</span> <span class="fu">which.max</span>(<span class="fu">rowMeans</span>(validation_results))</span>
+<span id="cb57-342"><a href="#cb57-342" aria-hidden="true" tabindex="-1"></a>best_params <span class="ot">&lt;-</span> rgrid[best_params_idx,]</span>
+<span id="cb57-343"><a href="#cb57-343" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Best parameters:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-344"><a href="#cb57-344" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(best_params)</span>
+<span id="cb57-345"><a href="#cb57-345" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-346"><a href="#cb57-346" aria-hidden="true" tabindex="-1"></a><span class="co"># Run X tests with best parameters</span></span>
+<span id="cb57-347"><a href="#cb57-347" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Running X test iterations with best parameters...</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-348"><a href="#cb57-348" aria-hidden="true" tabindex="-1"></a>test_aucs <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb57-349"><a href="#cb57-349" aria-hidden="true" tabindex="-1"></a>test_j_stats <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb57-350"><a href="#cb57-350" aria-hidden="true" tabindex="-1"></a>confusion_matrices <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb57-351"><a href="#cb57-351" aria-hidden="true" tabindex="-1"></a>performance_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb57-352"><a href="#cb57-352" aria-hidden="true" tabindex="-1"></a>all_thresholds <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb57-353"><a href="#cb57-353" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-354"><a href="#cb57-354" aria-hidden="true" tabindex="-1"></a><span class="co"># Train final model with best parameters</span></span>
+<span id="cb57-355"><a href="#cb57-355" aria-hidden="true" tabindex="-1"></a>best_params_list <span class="ot">&lt;-</span> <span class="fu">as.list</span>(best_params[<span class="sc">-</span><span class="fu">which</span>(<span class="fu">names</span>(best_params) <span class="sc">==</span> <span class="st">"nrounds"</span>)])</span>
+<span id="cb57-356"><a href="#cb57-356" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>booster <span class="ot">&lt;-</span> <span class="st">"gblinear"</span></span>
+<span id="cb57-357"><a href="#cb57-357" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>objective <span class="ot">&lt;-</span> <span class="st">"binary:logistic"</span></span>
+<span id="cb57-358"><a href="#cb57-358" aria-hidden="true" tabindex="-1"></a>best_params_list<span class="sc">$</span>nthread <span class="ot">&lt;-</span> nc</span>
+<span id="cb57-359"><a href="#cb57-359" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-360"><a href="#cb57-360" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">25</span>) {</span>
+<span id="cb57-361"><a href="#cb57-361" aria-hidden="true" tabindex="-1"></a>  <span class="co">#cat("\nIteration", i, "of 100\n")       </span></span>
+<span id="cb57-362"><a href="#cb57-362" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Create test split</span></span>
+<span id="cb57-363"><a href="#cb57-363" aria-hidden="true" tabindex="-1"></a>  idx <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">sample</span>(<span class="fu">nrow</span>(xs), <span class="fu">nrow</span>(xs), T))</span>
+<span id="cb57-364"><a href="#cb57-364" aria-hidden="true" tabindex="-1"></a>  train_x <span class="ot">&lt;-</span> xs[idx, ]</span>
+<span id="cb57-365"><a href="#cb57-365" aria-hidden="true" tabindex="-1"></a>  train_y <span class="ot">&lt;-</span> y[idx]</span>
+<span id="cb57-366"><a href="#cb57-366" aria-hidden="true" tabindex="-1"></a>  test_x <span class="ot">&lt;-</span> xs[<span class="sc">-</span>idx, ]</span>
+<span id="cb57-367"><a href="#cb57-367" aria-hidden="true" tabindex="-1"></a>  test_y <span class="ot">&lt;-</span> y[<span class="sc">-</span>idx]</span>
+<span id="cb57-368"><a href="#cb57-368" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-369"><a href="#cb57-369" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Train model</span></span>
+<span id="cb57-370"><a href="#cb57-370" aria-hidden="true" tabindex="-1"></a>  dm_train <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> train_x, <span class="at">label =</span> train_y)</span>
+<span id="cb57-371"><a href="#cb57-371" aria-hidden="true" tabindex="-1"></a>  mdl <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb57-372"><a href="#cb57-372" aria-hidden="true" tabindex="-1"></a>    <span class="at">params =</span> best_params_list,</span>
+<span id="cb57-373"><a href="#cb57-373" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> dm_train,</span>
+<span id="cb57-374"><a href="#cb57-374" aria-hidden="true" tabindex="-1"></a>    <span class="at">nrounds =</span> best_params[[<span class="st">"nrounds"</span>]],</span>
+<span id="cb57-375"><a href="#cb57-375" aria-hidden="true" tabindex="-1"></a>    <span class="at">verbose =</span> <span class="cn">FALSE</span></span>
+<span id="cb57-376"><a href="#cb57-376" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb57-377"><a href="#cb57-377" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-378"><a href="#cb57-378" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Get predictions</span></span>
+<span id="cb57-379"><a href="#cb57-379" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">predict</span>(mdl, <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> test_x))</span>
+<span id="cb57-380"><a href="#cb57-380" aria-hidden="true" tabindex="-1"></a>  pred <span class="ot">&lt;-</span> <span class="fu">prediction</span>(p, test_y)</span>
+<span id="cb57-381"><a href="#cb57-381" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-382"><a href="#cb57-382" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate AUC</span></span>
+<span id="cb57-383"><a href="#cb57-383" aria-hidden="true" tabindex="-1"></a>  test_aucs[i] <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"auc"</span>)<span class="sc">@</span>y.values[[<span class="dv">1</span>]]</span>
+<span id="cb57-384"><a href="#cb57-384" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-385"><a href="#cb57-385" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Calculate ROC curve and store</span></span>
+<span id="cb57-386"><a href="#cb57-386" aria-hidden="true" tabindex="-1"></a>  perf <span class="ot">&lt;-</span> <span class="fu">performance</span>(pred, <span class="st">"tpr"</span>, <span class="st">"fpr"</span>)</span>
+<span id="cb57-387"><a href="#cb57-387" aria-hidden="true" tabindex="-1"></a>  performance_list[[i]] <span class="ot">&lt;-</span> perf</span>
+<span id="cb57-388"><a href="#cb57-388" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-389"><a href="#cb57-389" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Find optimal threshold using Youden's J statistic</span></span>
+<span id="cb57-390"><a href="#cb57-390" aria-hidden="true" tabindex="-1"></a>  tpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>y.values)</span>
+<span id="cb57-391"><a href="#cb57-391" aria-hidden="true" tabindex="-1"></a>  fpr <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>x.values)</span>
+<span id="cb57-392"><a href="#cb57-392" aria-hidden="true" tabindex="-1"></a>  j_stats <span class="ot">&lt;-</span> tpr <span class="sc">-</span> fpr</span>
+<span id="cb57-393"><a href="#cb57-393" aria-hidden="true" tabindex="-1"></a>  best_j_idx <span class="ot">&lt;-</span> <span class="fu">which.max</span>(j_stats)</span>
+<span id="cb57-394"><a href="#cb57-394" aria-hidden="true" tabindex="-1"></a>  optimal_threshold <span class="ot">&lt;-</span> <span class="fu">unlist</span>(perf<span class="sc">@</span>alpha.values)[best_j_idx]</span>
+<span id="cb57-395"><a href="#cb57-395" aria-hidden="true" tabindex="-1"></a>  all_thresholds[i] <span class="ot">&lt;-</span> optimal_threshold</span>
+<span id="cb57-396"><a href="#cb57-396" aria-hidden="true" tabindex="-1"></a>  test_j_stats[i] <span class="ot">&lt;-</span> j_stats[best_j_idx]</span>
+<span id="cb57-397"><a href="#cb57-397" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb57-398"><a href="#cb57-398" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Create confusion matrix with optimal threshold (1-0 order with TP in top left)</span></span>
+<span id="cb57-399"><a href="#cb57-399" aria-hidden="true" tabindex="-1"></a>  pred_class <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(p <span class="sc">&gt;=</span> optimal_threshold, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb57-400"><a href="#cb57-400" aria-hidden="true" tabindex="-1"></a>  cm <span class="ot">&lt;-</span> <span class="fu">table</span>(<span class="fu">factor</span>(test_y, <span class="at">levels=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)), </span>
+<span id="cb57-401"><a href="#cb57-401" aria-hidden="true" tabindex="-1"></a>             <span class="fu">factor</span>(pred_class, <span class="at">levels=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>)))</span>
+<span id="cb57-402"><a href="#cb57-402" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(cm) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Pred 1"</span>, <span class="st">"Pred 0"</span>)</span>
+<span id="cb57-403"><a href="#cb57-403" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(cm) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"True 1"</span>, <span class="st">"True 0"</span>)</span>
+<span id="cb57-404"><a href="#cb57-404" aria-hidden="true" tabindex="-1"></a>  confusion_matrices[[i]] <span class="ot">&lt;-</span> cm</span>
+<span id="cb57-405"><a href="#cb57-405" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb57-406"><a href="#cb57-406" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-407"><a href="#cb57-407" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate average confusion matrix</span></span>
+<span id="cb57-408"><a href="#cb57-408" aria-hidden="true" tabindex="-1"></a>avg_cm <span class="ot">&lt;-</span> <span class="fu">Reduce</span>(<span class="st">'+'</span>, confusion_matrices) <span class="sc">/</span> <span class="fu">length</span>(confusion_matrices)</span>
+<span id="cb57-409"><a href="#cb57-409" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-410"><a href="#cb57-410" aria-hidden="true" tabindex="-1"></a><span class="co"># Print final results</span></span>
+<span id="cb57-411"><a href="#cb57-411" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Test Results over 100 iterations:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-412"><a href="#cb57-412" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean AUC:"</span>, <span class="fu">mean</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-413"><a href="#cb57-413" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SD AUC:"</span>, <span class="fu">sd</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-414"><a href="#cb57-414" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean Youden's J:"</span>, <span class="fu">mean</span>(test_j_stats), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-415"><a href="#cb57-415" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SD Youden's J:"</span>, <span class="fu">sd</span>(test_j_stats), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-416"><a href="#cb57-416" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean Optimal Threshold:"</span>, <span class="fu">mean</span>(all_thresholds), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-417"><a href="#cb57-417" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"95% CI for AUC:"</span>, <span class="fu">mean</span>(test_aucs) <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(test_aucs), </span>
+<span id="cb57-418"><a href="#cb57-418" aria-hidden="true" tabindex="-1"></a>    <span class="st">"to"</span>, <span class="fu">mean</span>(test_aucs) <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(test_aucs), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-419"><a href="#cb57-419" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Average Confusion Matrix:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb57-420"><a href="#cb57-420" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(avg_cm)</span>
+<span id="cb57-421"><a href="#cb57-421" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-422"><a href="#cb57-422" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot ROC curve with confidence intervals</span></span>
+<span id="cb57-423"><a href="#cb57-423" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">100</span><span class="sc">/</span><span class="dv">100</span>, <span class="dv">0</span><span class="sc">:</span><span class="dv">100</span><span class="sc">/</span><span class="dv">100</span>, <span class="at">type=</span><span class="st">"l"</span>, <span class="at">lty=</span><span class="dv">2</span>, </span>
+<span id="cb57-424"><a href="#cb57-424" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"False Positive Rate"</span>, <span class="at">ylab=</span><span class="st">"True Positive Rate"</span>,</span>
+<span id="cb57-425"><a href="#cb57-425" aria-hidden="true" tabindex="-1"></a>     <span class="at">main=</span><span class="st">"ROC Curve"</span>)</span>
+<span id="cb57-426"><a href="#cb57-426" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-427"><a href="#cb57-427" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate average ROC curve with confidence intervals</span></span>
+<span id="cb57-428"><a href="#cb57-428" aria-hidden="true" tabindex="-1"></a>fpr_grid <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">100</span>)</span>
+<span id="cb57-429"><a href="#cb57-429" aria-hidden="true" tabindex="-1"></a>tpr_matrix <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="cn">NA</span>, <span class="at">nrow =</span> <span class="fu">length</span>(performance_list), <span class="at">ncol =</span> <span class="fu">length</span>(fpr_grid))</span>
+<span id="cb57-430"><a href="#cb57-430" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-431"><a href="#cb57-431" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="fu">seq_along</span>(performance_list)) {</span>
+<span id="cb57-432"><a href="#cb57-432" aria-hidden="true" tabindex="-1"></a>  curve_i <span class="ot">&lt;-</span> performance_list[[i]]</span>
+<span id="cb57-433"><a href="#cb57-433" aria-hidden="true" tabindex="-1"></a>  tpr_matrix[i,] <span class="ot">&lt;-</span> <span class="fu">approx</span>(curve_i<span class="sc">@</span>x.values[[<span class="dv">1</span>]], </span>
+<span id="cb57-434"><a href="#cb57-434" aria-hidden="true" tabindex="-1"></a>                          curve_i<span class="sc">@</span>y.values[[<span class="dv">1</span>]], </span>
+<span id="cb57-435"><a href="#cb57-435" aria-hidden="true" tabindex="-1"></a>                          <span class="at">xout =</span> fpr_grid)<span class="sc">$</span>y</span>
+<span id="cb57-436"><a href="#cb57-436" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb57-437"><a href="#cb57-437" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-438"><a href="#cb57-438" aria-hidden="true" tabindex="-1"></a>mean_tpr <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(tpr_matrix, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb57-439"><a href="#cb57-439" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, mean_tpr, <span class="at">col=</span><span class="st">"red"</span>, <span class="at">lwd=</span><span class="dv">2</span>)</span>
+<span id="cb57-440"><a href="#cb57-440" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-441"><a href="#cb57-441" aria-hidden="true" tabindex="-1"></a><span class="co"># Add optimal threshold point</span></span>
+<span id="cb57-442"><a href="#cb57-442" aria-hidden="true" tabindex="-1"></a>opt_point_idx <span class="ot">&lt;-</span> <span class="fu">which.min</span>(<span class="fu">abs</span>(fpr_grid <span class="sc">-</span> <span class="fu">mean</span>(all_thresholds)))</span>
+<span id="cb57-443"><a href="#cb57-443" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(fpr_grid[opt_point_idx], mean_tpr[opt_point_idx], </span>
+<span id="cb57-444"><a href="#cb57-444" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="st">"blue"</span>, <span class="at">pch=</span><span class="dv">19</span>, <span class="at">cex=</span><span class="fl">1.5</span>)</span>
+<span id="cb57-445"><a href="#cb57-445" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-446"><a href="#cb57-446" aria-hidden="true" tabindex="-1"></a><span class="co"># Add confidence interval</span></span>
+<span id="cb57-447"><a href="#cb57-447" aria-hidden="true" tabindex="-1"></a>ci_lower <span class="ot">&lt;-</span> <span class="fu">apply</span>(tpr_matrix, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="fu">quantile</span>(x, <span class="fl">0.025</span>, <span class="at">na.rm=</span><span class="cn">TRUE</span>))</span>
+<span id="cb57-448"><a href="#cb57-448" aria-hidden="true" tabindex="-1"></a>ci_upper <span class="ot">&lt;-</span> <span class="fu">apply</span>(tpr_matrix, <span class="dv">2</span>, <span class="cf">function</span>(x) <span class="fu">quantile</span>(x, <span class="fl">0.975</span>, <span class="at">na.rm=</span><span class="cn">TRUE</span>))</span>
+<span id="cb57-449"><a href="#cb57-449" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, ci_lower, <span class="at">col=</span><span class="st">"gray"</span>, <span class="at">lty=</span><span class="dv">2</span>)</span>
+<span id="cb57-450"><a href="#cb57-450" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(fpr_grid, ci_upper, <span class="at">col=</span><span class="st">"gray"</span>, <span class="at">lty=</span><span class="dv">2</span>)</span>
+<span id="cb57-451"><a href="#cb57-451" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-452"><a href="#cb57-452" aria-hidden="true" tabindex="-1"></a><span class="co"># Add legend</span></span>
+<span id="cb57-453"><a href="#cb57-453" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"bottomright"</span>, </span>
+<span id="cb57-454"><a href="#cb57-454" aria-hidden="true" tabindex="-1"></a>       <span class="at">legend=</span><span class="fu">c</span>(<span class="st">"Random"</span>, <span class="st">"Average ROC"</span>, <span class="st">"95% CI"</span>, <span class="st">"Optimal Threshold"</span>),</span>
+<span id="cb57-455"><a href="#cb57-455" aria-hidden="true" tabindex="-1"></a>       <span class="at">col=</span><span class="fu">c</span>(<span class="st">"black"</span>, <span class="st">"red"</span>, <span class="st">"gray"</span>, <span class="st">"blue"</span>), </span>
+<span id="cb57-456"><a href="#cb57-456" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="cn">NA</span>), </span>
+<span id="cb57-457"><a href="#cb57-457" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch=</span><span class="fu">c</span>(<span class="cn">NA</span>,<span class="cn">NA</span>,<span class="cn">NA</span>,<span class="dv">19</span>),</span>
+<span id="cb57-458"><a href="#cb57-458" aria-hidden="true" tabindex="-1"></a>       <span class="at">lwd=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">1</span>,<span class="cn">NA</span>))</span>
+<span id="cb57-459"><a href="#cb57-459" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+</body></html>

@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>4th Downs in the NFL - Attendance Impact</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet">
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">4th Downs in the NFL</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html" rel="" target="">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./heckman.html" rel="" target="">
+ <span class="menu-text">Heckman Selection</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./xgboost.html" rel="" target="">
+ <span class="menu-text">XGBoost Prediction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./attendance.html" rel="" target="" aria-current="page">
+ <span class="menu-text">Attendance Impact</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./thirddown.html" rel="" target="">
+ <span class="menu-text">Third Down Analysis</span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools ms-auto">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">Attendance Impact</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>attendance_data <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"predict_attendance.csv.gz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># interact home_attendance and posteam_type_home</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>attendance_data<span class="sc">$</span>interact_HxA <span class="ot">&lt;-</span> attendance_data<span class="sc">$</span>home_attendance <span class="sc">*</span> attendance_data<span class="sc">$</span>posteam_type_home</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># kill my_id                      </span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>attendance_data<span class="sc">$</span>my_id <span class="ot">&lt;-</span> <span class="cn">NULL</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ols                     </span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>ols <span class="ot">&lt;-</span> <span class="fu">lm</span>(attempt <span class="sc">~</span>., <span class="at">data =</span> attendance_data)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ols)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = attempt ~ ., data = attendance_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.7551 -0.2586 -0.1143  0.1580  1.1257 
+
+Coefficients:
+                                                        Estimate Std. Error
+(Intercept)                                            3.083e-01  1.483e-02
+ydstogo                                               -1.116e-01  4.612e-03
+yardline_100                                          -5.504e-02  4.759e-03
+posteam_timeouts_remaining                            -3.540e-02  5.248e-03
+defteam_timeouts_remaining                            -1.277e-03  5.340e-03
+week                                                  -5.127e-03  5.419e-03
+temp                                                  -3.194e-03  5.712e-03
+wind                                                   4.714e-05  6.207e-03
+vegas_wp                                              -7.217e-02  1.028e-02
+vegas_wp_posteam                                       1.198e-03  4.526e-03
+total_line                                             4.054e-05  6.032e-03
+score_diff                                            -1.672e-02  9.231e-03
+down1_pct                                              8.409e-03  5.891e-03
+down2_pct                                             -1.700e-02  6.045e-03
+down3_pct                                             -3.280e-03  5.909e-03
+down4_pct                                              4.335e-03  5.627e-03
+prep_days                                             -3.568e-03  4.490e-03
+overall_win_pct                                        8.207e-03  8.746e-03
+team_win_pct                                           1.559e-02  9.136e-03
+prev_shotgun_rate                                     -6.381e-03  7.813e-03
+prev_singleback_rate                                  -1.479e-02  6.910e-03
+prev_empty_rate                                       -1.483e-02  5.370e-03
+prev_shotgun_success                                  -2.535e-03  6.513e-03
+prev_singleback_success                                2.620e-03  6.772e-03
+prev_empty_success                                     3.219e-03  5.383e-03
+prev_stop_rate_run                                     3.110e-03  5.353e-03
+prev_stop_rate_pass                                    2.548e-03  5.274e-03
+prev_win_pct                                           5.203e-03  6.299e-03
+shotgun_rate                                           2.407e-02  6.276e-03
+singleback_rate                                        3.325e-02  6.177e-03
+empty_rate                                             2.973e-02  6.295e-03
+shotgun_success                                        2.824e-02  5.572e-03
+singleback_success                                    -6.442e-04  5.579e-03
+empty_success                                          6.318e-03  5.852e-03
+def_stop_rate_run                                     -2.156e-03  5.379e-03
+def_stop_rate_pass                                    -1.552e-02  5.350e-03
+avg_pass_rushers                                      -2.922e-03  5.852e-03
+avg_box_defenders                                      9.035e-03  5.764e-03
+cover0_rate                                           -1.719e-03  5.658e-03
+cover1_rate                                            9.067e-03  8.156e-03
+cover2_rate                                           -7.595e-03  6.174e-03
+cover3_rate                                            7.800e-05  7.829e-03
+cover4_rate                                            1.022e-03  6.664e-03
+cover6_rate                                           -5.567e-03  5.939e-03
+two_man_rate                                           1.044e-02  5.191e-03
+prevent_rate                                          -2.598e-03  5.057e-03
+home_attendance                                       -3.624e-02  1.490e-02
+roof_outdoors                                         -3.333e-03  1.437e-02
+posteam_type_home                                      1.364e-03  1.285e-02
+p_player_26_punting_grades_grades_punter_12w           2.133e-03  6.516e-03
+p_player_26_punting_grades_grades_punter_2w           -3.648e-03  6.545e-03
+k_player_25_field_goals_grades_grades_fgep_kicker_12w -1.013e-02  6.265e-03
+k_player_25_field_goals_grades_grades_fgep_kicker_2w   8.340e-03  6.271e-03
+is_first_half                                         -1.448e-01  8.904e-03
+time_in_half                                          -4.291e-02  5.683e-03
+interact_HxA                                           3.495e-02  1.787e-02
+                                                      t value Pr(&gt;|t|)    
+(Intercept)                                            20.795  &lt; 2e-16 ***
+ydstogo                                               -24.188  &lt; 2e-16 ***
+yardline_100                                          -11.565  &lt; 2e-16 ***
+posteam_timeouts_remaining                             -6.745 1.66e-11 ***
+defteam_timeouts_remaining                             -0.239 0.811015    
+week                                                   -0.946 0.344187    
+temp                                                   -0.559 0.576065    
+wind                                                    0.008 0.993940    
+vegas_wp                                               -7.022 2.39e-12 ***
+vegas_wp_posteam                                        0.265 0.791171    
+total_line                                              0.007 0.994637    
+score_diff                                             -1.811 0.070199 .  
+down1_pct                                               1.427 0.153497    
+down2_pct                                              -2.813 0.004918 ** 
+down3_pct                                              -0.555 0.578920    
+down4_pct                                               0.770 0.441092    
+prep_days                                              -0.795 0.426861    
+overall_win_pct                                         0.938 0.348077    
+team_win_pct                                            1.706 0.088047 .  
+prev_shotgun_rate                                      -0.817 0.414108    
+prev_singleback_rate                                   -2.140 0.032363 *  
+prev_empty_rate                                        -2.762 0.005765 ** 
+prev_shotgun_success                                   -0.389 0.697105    
+prev_singleback_success                                 0.387 0.698880    
+prev_empty_success                                      0.598 0.549901    
+prev_stop_rate_run                                      0.581 0.561243    
+prev_stop_rate_pass                                     0.483 0.628930    
+prev_win_pct                                            0.826 0.408856    
+shotgun_rate                                            3.835 0.000127 ***
+singleback_rate                                         5.382 7.59e-08 ***
+empty_rate                                              4.722 2.38e-06 ***
+shotgun_success                                         5.068 4.11e-07 ***
+singleback_success                                     -0.115 0.908068    
+empty_success                                           1.080 0.280360    
+def_stop_rate_run                                      -0.401 0.688533    
+def_stop_rate_pass                                     -2.901 0.003732 ** 
+avg_pass_rushers                                       -0.499 0.617634    
+avg_box_defenders                                       1.567 0.117062    
+cover0_rate                                            -0.304 0.761214    
+cover1_rate                                             1.112 0.266320    
+cover2_rate                                            -1.230 0.218646    
+cover3_rate                                             0.010 0.992051    
+cover4_rate                                             0.153 0.878096    
+cover6_rate                                            -0.937 0.348642    
+two_man_rate                                            2.012 0.044254 *  
+prevent_rate                                           -0.514 0.607439    
+home_attendance                                        -2.433 0.015012 *  
+roof_outdoors                                          -0.232 0.816599    
+posteam_type_home                                       0.106 0.915484    
+p_player_26_punting_grades_grades_punter_12w            0.327 0.743466    
+p_player_26_punting_grades_grades_punter_2w            -0.557 0.577289    
+k_player_25_field_goals_grades_grades_fgep_kicker_12w  -1.617 0.105943    
+k_player_25_field_goals_grades_grades_fgep_kicker_2w    1.330 0.183577    
+is_first_half                                         -16.258  &lt; 2e-16 ***
+time_in_half                                           -7.551 4.88e-14 ***
+interact_HxA                                            1.956 0.050561 .  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.3698 on 7005 degrees of freedom
+Multiple R-squared:  0.2255,    Adjusted R-squared:  0.2194 
+F-statistic: 37.09 on 55 and 7005 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># probit</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>probit <span class="ot">&lt;-</span> <span class="fu">glm</span>(attempt <span class="sc">~</span> ., <span class="at">data =</span> attendance_data, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"probit"</span>))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(probit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = attempt ~ ., family = binomial(link = "probit"), 
+    data = attendance_data)
+
+Coefficients:
+                                                        Estimate Std. Error
+(Intercept)                                           -0.6420436  0.0626559
+ydstogo                                               -0.5519303  0.0250923
+yardline_100                                          -0.2233212  0.0200626
+posteam_timeouts_remaining                            -0.1188446  0.0209518
+defteam_timeouts_remaining                            -0.0052200  0.0218699
+week                                                  -0.0177176  0.0230864
+temp                                                  -0.0223176  0.0245033
+wind                                                  -0.0068888  0.0262712
+vegas_wp                                              -0.2789131  0.0434208
+vegas_wp_posteam                                       0.0110670  0.0189411
+total_line                                            -0.0049884  0.0256309
+score_diff                                            -0.0511607  0.0385998
+down1_pct                                              0.0360875  0.0255341
+down2_pct                                             -0.0879857  0.0264672
+down3_pct                                             -0.0035709  0.0259523
+down4_pct                                              0.0120851  0.0242548
+prep_days                                             -0.0123755  0.0191293
+overall_win_pct                                        0.0161710  0.0373025
+team_win_pct                                           0.0740698  0.0388649
+prev_shotgun_rate                                     -0.0293363  0.0334556
+prev_singleback_rate                                  -0.0626404  0.0299135
+prev_empty_rate                                       -0.0685766  0.0232124
+prev_shotgun_success                                  -0.0202862  0.0277112
+prev_singleback_success                                0.0161013  0.0287995
+prev_empty_success                                     0.0095858  0.0230042
+prev_stop_rate_run                                     0.0124247  0.0229103
+prev_stop_rate_pass                                    0.0151649  0.0222048
+prev_win_pct                                           0.0188098  0.0267633
+shotgun_rate                                           0.1176284  0.0266631
+singleback_rate                                        0.1562852  0.0256692
+empty_rate                                             0.1339958  0.0264341
+shotgun_success                                        0.1045419  0.0228195
+singleback_success                                    -0.0064901  0.0228051
+empty_success                                          0.0271674  0.0235060
+def_stop_rate_run                                     -0.0059690  0.0232680
+def_stop_rate_pass                                    -0.0713950  0.0236376
+avg_pass_rushers                                      -0.0007916  0.0251868
+avg_box_defenders                                      0.0237898  0.0246185
+cover0_rate                                           -0.0143325  0.0240737
+cover1_rate                                            0.0236396  0.0344271
+cover2_rate                                           -0.0274039  0.0265915
+cover3_rate                                           -0.0130806  0.0334607
+cover4_rate                                           -0.0078907  0.0282710
+cover6_rate                                           -0.0282480  0.0255630
+two_man_rate                                           0.0435249  0.0219802
+prevent_rate                                          -0.0032654  0.0224649
+home_attendance                                       -0.1561444  0.0632667
+roof_outdoors                                         -0.0230183  0.0612472
+posteam_type_home                                      0.0030511  0.0542382
+p_player_26_punting_grades_grades_punter_12w           0.0104664  0.0263562
+p_player_26_punting_grades_grades_punter_2w           -0.0243929  0.0271966
+k_player_25_field_goals_grades_grades_fgep_kicker_12w -0.0416061  0.0261780
+k_player_25_field_goals_grades_grades_fgep_kicker_2w   0.0325331  0.0264829
+is_first_half                                         -0.5994292  0.0387882
+time_in_half                                          -0.1888545  0.0247846
+interact_HxA                                           0.1503756  0.0764558
+                                                      z value Pr(&gt;|z|)    
+(Intercept)                                           -10.247  &lt; 2e-16 ***
+ydstogo                                               -21.996  &lt; 2e-16 ***
+yardline_100                                          -11.131  &lt; 2e-16 ***
+posteam_timeouts_remaining                             -5.672 1.41e-08 ***
+defteam_timeouts_remaining                             -0.239 0.811350    
+week                                                   -0.767 0.442817    
+temp                                                   -0.911 0.362402    
+wind                                                   -0.262 0.793153    
+vegas_wp                                               -6.423 1.33e-10 ***
+vegas_wp_posteam                                        0.584 0.559028    
+total_line                                             -0.195 0.845688    
+score_diff                                             -1.325 0.185033    
+down1_pct                                               1.413 0.157565    
+down2_pct                                              -3.324 0.000886 ***
+down3_pct                                              -0.138 0.890560    
+down4_pct                                               0.498 0.618304    
+prep_days                                              -0.647 0.517670    
+overall_win_pct                                         0.434 0.664644    
+team_win_pct                                            1.906 0.056673 .  
+prev_shotgun_rate                                      -0.877 0.380556    
+prev_singleback_rate                                   -2.094 0.036255 *  
+prev_empty_rate                                        -2.954 0.003134 ** 
+prev_shotgun_success                                   -0.732 0.464132    
+prev_singleback_success                                 0.559 0.576104    
+prev_empty_success                                      0.417 0.676899    
+prev_stop_rate_run                                      0.542 0.587598    
+prev_stop_rate_pass                                     0.683 0.494634    
+prev_win_pct                                            0.703 0.482166    
+shotgun_rate                                            4.412 1.03e-05 ***
+singleback_rate                                         6.088 1.14e-09 ***
+empty_rate                                              5.069 4.00e-07 ***
+shotgun_success                                         4.581 4.62e-06 ***
+singleback_success                                     -0.285 0.775960    
+empty_success                                           1.156 0.247778    
+def_stop_rate_run                                      -0.257 0.797538    
+def_stop_rate_pass                                     -3.020 0.002524 ** 
+avg_pass_rushers                                       -0.031 0.974927    
+avg_box_defenders                                       0.966 0.333875    
+cover0_rate                                            -0.595 0.551603    
+cover1_rate                                             0.687 0.492299    
+cover2_rate                                            -1.031 0.302752    
+cover3_rate                                            -0.391 0.695853    
+cover4_rate                                            -0.279 0.780162    
+cover6_rate                                            -1.105 0.269145    
+two_man_rate                                            1.980 0.047682 *  
+prevent_rate                                           -0.145 0.884431    
+home_attendance                                        -2.468 0.013586 *  
+roof_outdoors                                          -0.376 0.707046    
+posteam_type_home                                       0.056 0.955139    
+p_player_26_punting_grades_grades_punter_12w            0.397 0.691283    
+p_player_26_punting_grades_grades_punter_2w            -0.897 0.369767    
+k_player_25_field_goals_grades_grades_fgep_kicker_12w  -1.589 0.111981    
+k_player_25_field_goals_grades_grades_fgep_kicker_2w    1.228 0.219275    
+is_first_half                                         -15.454  &lt; 2e-16 ***
+time_in_half                                           -7.620 2.54e-14 ***
+interact_HxA                                            1.967 0.049203 *  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 7554.7  on 7060  degrees of freedom
+Residual deviance: 5741.5  on 7005  degrees of freedom
+AIC: 5853.5
+
+Number of Fisher Scoring iterations: 6</code></pre>
+</div>
+</div>
+
+
+<!-- -->
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb8" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Attendance Impact"</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: true</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="in">```{r options, include=FALSE}</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">max.print=</span><span class="dv">10000</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>attendance_data <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">"predict_attendance.csv.gz"</span>)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="co"># interact home_attendance and posteam_type_home</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>attendance_data<span class="sc">$</span>interact_HxA <span class="ot">&lt;-</span> attendance_data<span class="sc">$</span>home_attendance <span class="sc">*</span> attendance_data<span class="sc">$</span>posteam_type_home</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="co"># kill my_id                      </span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>attendance_data<span class="sc">$</span>my_id <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a><span class="co"># ols                     </span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>ols <span class="ot">&lt;-</span> <span class="fu">lm</span>(attempt <span class="sc">~</span>., <span class="at">data =</span> attendance_data)</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ols)</span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a><span class="co"># probit</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>probit <span class="ot">&lt;-</span> <span class="fu">glm</span>(attempt <span class="sc">~</span> ., <span class="at">data =</span> attendance_data, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"probit"</span>))</span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(probit)</span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a></span>
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+</body></html>

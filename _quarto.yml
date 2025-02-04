@@ -1,0 +1,29 @@
+project:
+  type: website
+  output-dir: .\docs
+  
+website:
+  title: "4th Downs in the NFL"
+  navbar:
+    background: dark
+    search: true
+    left:
+      - text: "Home"
+        file: index.qmd
+      - text: "Heckman Selection"
+        file: heckman.qmd
+      - text: "XGBoost Prediction"
+        file: xgboost.qmd
+      - text: "Attendance Impact"
+        file: attendance.qmd
+      - text: "Third Down Analysis"
+        file: thirddown.qmd
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    code-fold: true
+    code-tools: true
+    df-print: paged

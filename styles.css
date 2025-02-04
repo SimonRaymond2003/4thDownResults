@@ -1,0 +1,55 @@
+ /* NFL Theme Styles */
+
+/* Navigation Bar */
+.navbar {
+    background-color: #013369 !important; /* NFL blue */
+}
+
+.nav-link {
+    color: #ffffff !important;
+}
+
+.nav-link:hover {
+    color: #D50A0A !important; /* NFL red */
+}
+
+/* Body Typography */
+body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Additional NFL-themed styles */
+.navbar-brand {
+    color: #ffffff !important;
+}
+
+.toc-active {
+    color: #D50A0A !important;
+}
+
+/* Make code blocks more readable */
+pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: #013369;
+    color: white;
+}
+
+/* Plot styling */
+.plot-container {
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+}
